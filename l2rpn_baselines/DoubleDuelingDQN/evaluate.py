@@ -26,13 +26,16 @@ DEFAULT_NB_PROCESS = 1
 DEFAULT_MAX_STEPS = -1
 DEFAULT_NUM_FRAMES = 4
 DEFAULT_VERBOSE = True
+DEFAULT_FILE = "./models/DoubleDuelingDQN.h5"
 
 
 def cli():
     parser = argparse.ArgumentParser(description="Eval baseline DDDQN")
-    parser.add_argument("--data_dir", required=True,
+    parser.add_argument("--data_dir", required=False,
+                        default="rte_case14_realistic",
                         help="Path to the dataset root directory")
-    parser.add_argument("--load_file", required=True,
+    parser.add_argument("--load_file", required=False,
+                        default= DEFAULT_FILE,
                         help="The path to the model [.h5]")
     parser.add_argument("--logs_dir", required=False,
                         default=DEFAULT_LOGS_DIR, type=str,

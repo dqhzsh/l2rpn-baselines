@@ -10,6 +10,7 @@
 
 import argparse
 
+import grid2op
 from l2rpn_baselines.DoubleDuelingDQN.doubleDuelingDQN import DoubleDuelingDQN as D3QNAgent
 from l2rpn_baselines.DoubleDuelingDQN.doubleDuelingDQNConfig import DoubleDuelingDQNConfig as D3QNConfig
 
@@ -115,7 +116,7 @@ if __name__ == "__main__":
     env.chronics_handler.set_chunk_size(128)
 
     # Register custom reward for training
-    cr = env.reward_helper.template_reward
+    cr = env._reward_helper.template_reward
     #cr.addReward("overflow", CloseToOverflowReward(), 1.0)
     cr.addReward("game", GameplayReward(), 1.0)
     #cr.addReward("recolines", LinesReconnectedReward(), 1.0)
