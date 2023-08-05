@@ -22,7 +22,7 @@ class ExperienceBuffer:
         self.current_episode = 0
 
     def add(self, s, a, r, d, s2, e):
-        experience = np.reshape(np.array([s, a, r, d, s2]), [1,5])
+        experience = np.reshape(np.array([s, a, r, d, s2],dtype=object), [1,5])
 
         # New episode
         if self.current_episode < e:

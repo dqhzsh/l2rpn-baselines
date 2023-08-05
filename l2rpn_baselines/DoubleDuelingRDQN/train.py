@@ -119,7 +119,7 @@ if __name__ == "__main__":
                reward_class=CombinedScaledReward)
 
     # Register custom reward for training
-    cr = env.reward_helper.template_reward
+    cr = env._reward_helper.template_reward
     cr.addReward("reco", LinesReconnectedReward(), 50.0)
     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
     cr.addReward("game", GameplayReward(), 100.0)
