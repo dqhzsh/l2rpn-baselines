@@ -1,4 +1,4 @@
-# DQH_L2RPN_Baselines
+# dqh_L2RPN_Baselines
 Repository hosting reference baselines for the [L2RPN challenge](https://l2rpn.chalearn.org/)
 
 # Install 
