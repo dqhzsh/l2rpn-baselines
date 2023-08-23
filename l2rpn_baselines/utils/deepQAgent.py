@@ -217,7 +217,7 @@ class DeepQAgent(AgentWithConverter):
         self._illegal_actions_per_ksteps = None
         self._ambiguous_actions_per_ksteps = None
 
-    def _fill_vectors(self, training_param):
+    def _fill_vectors(self, training_param):#初始化用于记录动作频率的数组
         self._vector_size  = self.nb_ * training_param.update_tensorboard_freq
         self._actions_per_ksteps = np.zeros((self._vector_size, self.action_space.size()), dtype=np.int)
         self._illegal_actions_per_ksteps = np.zeros(self._vector_size, dtype=np.int)
@@ -229,7 +229,10 @@ class DeepQAgent(AgentWithConverter):
         Generic way to convert an observation. This transform it to a vector and the select the attributes that were
         selected in :attr:`l2rpn_baselines.utils.NNParams.list_attr_obs` (that have been extracted once and for all
         in the :attr:`DeepQAgent._indx_obs` vector).
-
+        首先，将环境的观测 observation 转换为一个向量 obs_as_vect，这是通过调用 observation.to_vect() 来实现的。
+        然后，从 obs_as_vect 中选择在 DeepQAgent._indx_obs 中指定的属性，这个属性列表由之前提到的 NNParams.list_attr_obs 定义。
+            所选的属性值会填充到 _tmp_obs 数组中，它是一个预先分配好的数组，用于存储转换后的观测向量。
+        最后，返回 _tmp_obs 数组，即转换后的观测向量。
         Parameters
         ----------
         observation: :class:`grid2op.Observation.BaseObservation`

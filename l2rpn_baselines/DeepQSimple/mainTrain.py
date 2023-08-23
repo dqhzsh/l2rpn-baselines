@@ -44,6 +44,7 @@ try:
           logs_dir=logs_dir,
           training_param=tp,
           kwargs_converters=kwargs_converters,
-          kwargs_archi=kwargs_archi)
+          kwargs_archi=kwargs_archi,
+          verbose=True)
 finally:
     env.close()

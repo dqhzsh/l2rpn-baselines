@@ -201,7 +201,7 @@ def train(env,
     # as in our example (and in our explanation) we recommend to save the mode regurlarly in the "train" function
     # it is not necessary to save it again here. But if you chose not to follow these advice, it is more than
     # recommended to save the "baseline" at the end of this function with:
-    # baseline.save(path_save)
+    baseline.save(save_path)
     return baseline
 
 
@@ -326,14 +326,28 @@ if __name__ == "__main__":
                          "change_bus_vect": True,
                          "set_topo_vect": False
                          }
-    nm_ = args.name if args.name is not None else DEFAULT_NAME
+    # nm_ = args.name if args.name is not None else DEFAULT_NAME
+    # try:
+    #     train(env,
+    #           name=nm_,
+    #           iterations=args.num_train_steps,
+    #           save_path=args.save_path,
+    #           load_path=args.load_path,
+    #           logs_dir=args.logs_dir,
+    #           training_param=tp,
+    #           kwargs_converters=kwargs_converters,
+    #           kwargs_archi=kwargs_archi,
+    #           verbose=True)
+    nm_ = "DeepQSimpleModel"
+    save_path = "./models"
+    logs_dir = "./logs"
     try:
         train(env,
               name=nm_,
-              iterations=args.num_train_steps,
-              save_path=args.save_path,
-              load_path=args.load_path,
-              logs_dir=args.logs_dir,
+              iterations=10000,
+              save_path=save_path,
+              load_path=None,
+              logs_dir=logs_dir,
               training_param=tp,
               kwargs_converters=kwargs_converters,
               kwargs_archi=kwargs_archi,
