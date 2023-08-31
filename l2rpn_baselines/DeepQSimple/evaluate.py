@@ -200,12 +200,21 @@ if __name__ == "__main__":
                })
 
     # Call evaluation interface
+    # evaluate(env,
+    #          name=args.name,
+    #          load_path=os.path.abspath(args.load_path),
+    #          logs_path=args.logs_dir,
+    #          nb_episode=args.nb_episode,
+    #          nb_process=args.nb_process,
+    #          max_steps=args.max_steps,
+    #          verbose=args.verbose,
+    #          save_gif=args.save_gif)
     evaluate(env,
-             name=args.name,
-             load_path=os.path.abspath(args.load_path),
-             logs_path=args.logs_dir,
-             nb_episode=args.nb_episode,
-             nb_process=args.nb_process,
-             max_steps=args.max_steps,
-             verbose=args.verbose,
-             save_gif=args.save_gif)
+             name="DeepQSimpleModel",
+             load_path="./models/",
+             logs_path="./logs-eval/do-nothing-baseline",
+             nb_episode=10000,
+             nb_process=1,
+             max_steps=-1,
+             verbose=True,
+             save_gif=False)
