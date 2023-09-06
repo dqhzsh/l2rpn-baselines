@@ -18,7 +18,6 @@ from l2rpn_baselines.DeepQSimple.deepQ_NN import DeepQ_NN
 from l2rpn_baselines.utils import TrainingParam
 from l2rpn_baselines.utils.waring_msgs import _WARN_GPU_MEMORY
 
-
 def train(env,
           name=DEFAULT_NAME,
           iterations=1,
@@ -296,7 +295,7 @@ if __name__ == "__main__":
     tp.buffer_size = 1000000
 
     # e greedy
-    tp.min_observation = 10000
+    tp.min_observation = 1000
     tp.initial_epsilon = 0.4
     tp.final_epsilon = 1./(2*7*288.)
     tp.step_for_final_epsilon = int(1e5)

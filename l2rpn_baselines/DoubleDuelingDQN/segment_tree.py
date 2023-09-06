@@ -45,6 +45,7 @@ class SegmentTree(object):
         self._operation = operation
 
     def _reduce_helper(self, start, end, node, node_start, node_end):
+        #一个递归方法，用于在线段树中计算范围查询的结果
         if start == node_start and end == node_end:
             return self._value[node]
         mid = (node_start + node_end) // 2
@@ -64,7 +65,7 @@ class SegmentTree(object):
         to a contiguous subsequence of the array.
 
             self.operation(arr[start], operation(arr[start+1], operation(... arr[end])))
-
+        是用户可调用的方法，用于执行范围查询。它是对 _reduce_helper 方法的封装，提供了更友好的接口
         Parameters
         ----------
         start: int
@@ -86,6 +87,7 @@ class SegmentTree(object):
 
     def __setitem__(self, idx, val):
         # index of the leaf
+        # __setitem__ 方法允许你通过索引设置数组元素的值，并确保在更新数组元素后，树中的每个节点都正确地反映了新的数组状态，以便后续的 reduce 操作能够有效地执行。
         idx += self._capacity
         self._value[idx] = val
         idx //= 2
@@ -97,6 +99,7 @@ class SegmentTree(object):
             idx //= 2
 
     def __getitem__(self, idx):
+        #__getitem__(self, idx): 这是特殊方法 __getitem__，允许你通过索引获取数组元素的值。它会返回指定索引处的元素值。
         assert 0 <= idx < self._capacity
         return self._value[self._capacity + idx]
 
@@ -110,7 +113,7 @@ class SumSegmentTree(SegmentTree):
         )
 
     def sum(self, start=0, end=None):
-        """Returns arr[start] + ... + arr[end]"""
+        """Returns arr[start] + ... + arr[end]"""#"Returns arr[start] + ... + arr[end-1]
         return super(SumSegmentTree, self).reduce(start, end)
 
     def find_prefixsum_idx(self, prefixsum):

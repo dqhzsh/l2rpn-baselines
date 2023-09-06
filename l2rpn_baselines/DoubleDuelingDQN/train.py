@@ -18,7 +18,7 @@ DEFAULT_NAME = "DoubleDuelingDQN"
 DEFAULT_SAVE_DIR = "./models"
 DEFAULT_LOG_DIR = "./logs-train"
 DEFAULT_PRE_STEPS = 256
-DEFAULT_TRAIN_STEPS = 1024
+DEFAULT_TRAIN_STEPS = 10000
 DEFAULT_N_FRAMES = 4
 DEFAULT_BATCH_SIZE = 32
 DEFAULT_LR = 1e-5
@@ -90,7 +90,6 @@ def train(env,
 
     if load_path is not None:
         agent.load(load_path)
-
     agent.train(env,
                 iterations,
                 save_path,
@@ -125,7 +124,6 @@ if __name__ == "__main__":
     cr.initialize(env)
     # Set reward range to something managable
     cr.set_range(-1.0, 1.0)
-
     train(env,
           name = args.name,
           iterations = args.num_train_steps,
