@@ -141,6 +141,7 @@ class DuelQLeapNet_NN(BaseDeepQ):
                         name="x")
         inputs_tau = [Input(shape=(el,), name="tau_{}".format(nm_)) for el, nm_ in
                       zip(self._nn_archi.tau_dims, self._nn_archi.list_attr_obs_tau)]
+        #时间延迟输入是指在深度学习和神经网络中，将过去某一时刻或多个时刻的数据作为输入，以便模型能够考虑到时间上的延迟信息。
 
         lay = input_x
         for (size, act) in zip(self._nn_archi.sizes, self._nn_archi.activs):
