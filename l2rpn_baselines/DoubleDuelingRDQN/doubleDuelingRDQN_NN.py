@@ -51,13 +51,21 @@ class DoubleDuelingRDQN_NN(object):
 
     def construct_q_network(self):
         # Defines input tensors and scalars
-        self.trace_length = tf.Variable(1, dtype=tf.int32, name="trace_length")
-        self.dropout_rate = tf.Variable(0.0, dtype=tf.float32, trainable=False, name="dropout_rate")
+        self.trace_length = tf.Variable(1, dtype=tf.int32, name="trace_length")#序列长度。
+        self.dropout_rate = tf.Variable(0.0, dtype=tf.float32, trainable=False, name="dropout_rate")#用于控制输入的 dropout 比率（69行用到）。Dropout 是一种正则化技术，有助于减少过拟合。
         input_mem_state = tfk.Input(dtype=tf.float32, shape=(self.h_size), name='input_mem_state')
+        #这行代码创建了一个名为input_mem_state的输入层，用于表示LSTM的初始隐藏状态。
         input_carry_state = tfk.Input(dtype=tf.float32, shape=(self.h_size), name='input_carry_state')
+        #这行代码创建了一个名为 input_carry_state 的输入层，用于表示 LSTM 的初始细胞状态。
         input_layer = tfk.Input(dtype=tf.float32, shape=(None, self.observation_size), name='input_obs')
+        #这行代码创建了一个名为 input_layer 的输入层，用于表示观测序列,这个输入层可以接受任何形状的张量作为输入，
+        # 只要张量的最后一个维度与输入层的形状匹配即可。因此，不管输入的张量是一维、二维、三维或更高维度，都可以作为输入传递给模型。
+        # dtype=tf.float32 指定了输入数据的数据类型为 32 位浮点数。
+        # self.observation_size 表示每个时间步观测的特征维度。name='input_obs' 指定了该输入层的名称为 'input_obs'。
+        #self.observation_size 是指每个时间步观测的特征维度，这意味着在每个时间步，有一个包含455个特征的观测值。
 
-        # Get shapes from input_layer
+
+        # Get shapes from input_layer，这段代码逐行获取了输入层 input_layer 的形状信息，分别表示批次大小、序列长度和特征维度。
         batch_size = tf.shape(input_layer)[0]
         trace_len = tf.shape(input_layer)[1]
         data_size = tf.shape(input_layer)[-1]
@@ -80,6 +88,7 @@ class DoubleDuelingRDQN_NN(object):
         rnn_format = tf.reshape(lay4, (batch_size, trace_len, self.h_size),name="rnn_reshape")
         # Recurring part
         lstm_layer = tfkl.LSTM(self.h_size, return_state=True, name="lstm")
+        #return_state 参数决定是否返回最后一个时间步的隐藏状态和细胞状态
         lstm_state = [input_mem_state, input_carry_state]
         lstm_output, mem_s, carry_s = lstm_layer(rnn_format, initial_state=lstm_state)
 
