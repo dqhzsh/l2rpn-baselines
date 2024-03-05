@@ -88,9 +88,131 @@ class DoubleDuelingRDQN_NN(object):
         rnn_format = tf.reshape(lay4, (batch_size, trace_len, self.h_size),name="rnn_reshape")
         # Recurring part
         lstm_layer = tfkl.LSTM(self.h_size, return_state=True, name="lstm")
-        #return_state 参数决定是否返回最后一个时间步的隐藏状态和细胞状态
+        #lstm_layer 使用 tfkl.LSTM 创建，其中 self.h_size 表示 LSTM 层神经元的大小。return_state 参数决定是否返回最后一个时间步的隐藏状态和细胞状态
         lstm_state = [input_mem_state, input_carry_state]
+        #lstm_state 被定义为 [input_mem_state, input_carry_state]，它们是 LSTM 的隐藏和细胞状态的初始值。
         lstm_output, mem_s, carry_s = lstm_layer(rnn_format, initial_state=lstm_state)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        #通过使用 rnn_format（重塑后的输入）和初始状态调用 lstm_layer，得到 lstm_output、mem_s 和 carry_s。
+        # lstm_output 是每个样本在最后一个时间步的输出（隐藏状态），而 mem_s 和 carry_s 是处理输入序列后更新的隐藏和细胞状态。
 
         # Advantage and Value streams
         advantage = tfkl.Dense(64, name="fc_adv")(lstm_output)

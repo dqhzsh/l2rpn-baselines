@@ -6,6 +6,8 @@
 # SPDX-License-Identifier: MPL-2.0
 # This file is part of L2RPN Baselines, L2RPN Baselines a repository to host baselines for l2rpn competitions.
 
+import seaborn as sns
+import matplotlib.pyplot as plt
 import os
 import json
 import copy
@@ -81,6 +83,10 @@ class DoubleDuelingRDQN(AgentWithConverter):
         # Setup training vars if needed
         if self.is_training:
             self._init_training()
+
+        """添加的记录loss和reward的列表"""
+        self.loss_history = []
+        self.reward_history = []
 
 
     def _init_training(self):
@@ -370,6 +376,9 @@ class DoubleDuelingRDQN(AgentWithConverter):
         loss = self.Qmain.model.train_on_batch(batch_x, batch_y)
         loss = loss[0]
 
+        """添加"""#记录 loss
+        self.loss_history.append(loss)
+
         # Log some useful metrics
         if step % (cfg.UPDATE_FREQ * 2) == 0:
             if cfg.VERBOSE:
@@ -377,6 +386,8 @@ class DoubleDuelingRDQN(AgentWithConverter):
 
             with self.tf_writer.as_default():
                 mean_reward = np.mean(self.epoch_rewards)
+                """添加"""
+                self.reward_history.append(mean_reward)
                 mean_alive = np.mean(self.epoch_alive)
                 if len(self.epoch_rewards) >= 100:
                     mean_reward_100 = np.mean(self.epoch_rewards[-100:])
@@ -389,3 +400,26 @@ class DoubleDuelingRDQN(AgentWithConverter):
                 tf.summary.scalar("mean_reward_100", mean_reward_100, step)
                 tf.summary.scalar("mean_alive_100", mean_alive_100, step)
                 tf.summary.scalar("loss", loss, step)
+
+            """添加"""
+            if step % (cfg.UPDATE_FREQ * 10) == 0:  # 调整绘图的频率
+                self.plot_loss_and_reward()
+
+    def plot_loss_and_reward(self):
+        # 绘制 loss 和 reward 曲线图
+        plt.figure(figsize=(10, 5))
+
+        plt.subplot(1, 2, 1)
+        sns.lineplot(x=range(len(self.loss_history)), y=self.loss_history)
+        plt.title('Training Loss')
+        plt.xlabel('Training Step')
+        plt.ylabel('Loss')
+
+        plt.subplot(1, 2, 2)
+        sns.lineplot(x=range(len(self.reward_history)), y=self.reward_history)
+        plt.title('Mean Reward')
+        plt.xlabel('Training Step')
+        plt.ylabel('Mean Reward')
+
+        plt.tight_layout()
+        plt.show()
