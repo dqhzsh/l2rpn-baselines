@@ -152,7 +152,7 @@ class DoubleDuelingRDQN(AgentWithConverter):
         #return observation.to_vect()
         li_vect=  []
         for el in observation.attr_list_vect:
-            v = observation._get_array_from_attr_name(el).astype(np.float)
+            v = observation._get_array_from_attr_name(el).astype(float)
             v_fix = np.nan_to_num(v)
             v_norm = np.linalg.norm(v_fix)
             if v_norm > 1e6:
@@ -401,9 +401,9 @@ class DoubleDuelingRDQN(AgentWithConverter):
                 tf.summary.scalar("mean_alive_100", mean_alive_100, step)
                 tf.summary.scalar("loss", loss, step)
 
-            """添加"""
-            if step % (cfg.UPDATE_FREQ * 10) == 0:  # 调整绘图的频率
-                self.plot_loss_and_reward()
+            # """添加"""
+            # if step % (cfg.UPDATE_FREQ * 10) == 0:  # 调整绘图的频率
+            #     self.plot_loss_and_reward()
 
     def plot_loss_and_reward(self):
         # 绘制 loss 和 reward 曲线图
