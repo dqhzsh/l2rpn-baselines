@@ -17,14 +17,14 @@ from grid2op.Reward import *
 from grid2op.Action import *
 
 from l2rpn_baselines.DoubleDuelingRDQN.doubleDuelingRDQNConfig import DoubleDuelingRDQNConfig as RDQNConfig
-from l2rpn_baselines.DoubleDuelingRDQN.doubleDuelingRDQN import DoubleDuelingRDQN as RDQNAgent
+from l2rpn_baselines.ModifyDoubleDuelingRDQN.doubleDuelingRDQN import DoubleDuelingRDQN as RDQNAgent
 from l2rpn_baselines.utils.save_log_gif import save_log_gif
 
 DEFAULT_LOGS_DIR = "./logs-eval"
 DEFAULT_NB_EPISODE = 10
 DEFAULT_NB_PROCESS = 1
 DEFAULT_MAX_STEPS = -1
-DEFAULT_VERBOSE = True
+DEFAULT_VERBOSE = False
 DEFAULT_FILE = "./models\DoubleDuelingRDQN.tf"
 
 def cli():
@@ -143,5 +143,5 @@ if __name__ == "__main__":
              nb_episode=args.nb_episode,
              nb_process=args.nb_process,
              max_steps=args.max_steps,
-             verbose=DEFAULT_VERBOSE,
+             verbose=True,
              save_gif=args.gif)

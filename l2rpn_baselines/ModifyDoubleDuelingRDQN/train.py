@@ -14,15 +14,14 @@ from grid2op.MakeEnv import make
 from grid2op.Reward import *
 from grid2op.Action import *
 
-from l2rpn_baselines.DoubleDuelingRDQN.doubleDuelingRDQNConfig import DoubleDuelingRDQNConfig as RDQNConfig
-from l2rpn_baselines.DoubleDuelingRDQN.doubleDuelingRDQN import DoubleDuelingRDQN as RDQNAgent
+from l2rpn_baselines.ModifyDoubleDuelingRDQN.doubleDuelingRDQNConfig import DoubleDuelingRDQNConfig as RDQNConfig
+from l2rpn_baselines.ModifyDoubleDuelingRDQN.doubleDuelingRDQN import DoubleDuelingRDQN as RDQNAgent
 
-DEFAULT_NAME = "DoubleDuelingRDQN"
+DEFAULT_NAME = "ModifyDoubleDuelingRDQN"
 DEFAULT_SAVE_DIR = "./models"
 DEFAULT_LOG_DIR = "./logs-train"
 DEFAULT_PRE_STEPS = 256
 DEFAULT_TRAIN_STEPS = 10000
-#DEFAULT_TRAIN_STEPS = 5000000
 DEFAULT_TRACE_LEN = 12
 DEFAULT_BATCH_SIZE = 32
 DEFAULT_LR = 1e-5
@@ -118,8 +117,6 @@ if __name__ == "__main__":
     env = make(args.data_dir,
                action_class=TopologyChangeAndDispatchAction,
                reward_class=CombinedScaledReward)
-
-    print(env.chronics_handler.get_name())
 
     # Register custom reward for training
     cr = env._reward_helper.template_reward
