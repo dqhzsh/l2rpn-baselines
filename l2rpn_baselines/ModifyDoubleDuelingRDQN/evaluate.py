@@ -16,7 +16,7 @@ from grid2op.Runner import Runner
 from grid2op.Reward import *
 from grid2op.Action import *
 
-from l2rpn_baselines.DoubleDuelingRDQN.doubleDuelingRDQNConfig import DoubleDuelingRDQNConfig as RDQNConfig
+from l2rpn_baselines.ModifyDoubleDuelingRDQN.doubleDuelingRDQNConfig import DoubleDuelingRDQNConfig as RDQNConfig
 from l2rpn_baselines.ModifyDoubleDuelingRDQN.doubleDuelingRDQN import DoubleDuelingRDQN as RDQNAgent
 from l2rpn_baselines.utils.save_log_gif import save_log_gif
 
@@ -25,7 +25,7 @@ DEFAULT_NB_EPISODE = 10
 DEFAULT_NB_PROCESS = 1
 DEFAULT_MAX_STEPS = -1
 DEFAULT_VERBOSE = False
-DEFAULT_FILE = "./models\DoubleDuelingRDQN.tf"
+DEFAULT_FILE = "./models\ModifyDoubleDuelingRDQN.tf"
 
 def cli():
     parser = argparse.ArgumentParser(description="Eval baseline DDDQN")

@@ -116,11 +116,13 @@ class DoubleDuelingRDQN(AgentWithConverter):
             exp = episode_exp[0] # Use inital state to fill out
             for missing in range(missing_obs):
                 # Use do_nothing action at index 0
-                self.exp_buffer.add(exp[0], 0, exp[2], exp[3], exp[4], episode)
+                #self.exp_buffer.add(exp[0], 0, exp[2], exp[3], exp[4], episode)
+                self.exp_buffer.add(exp[0], 0, exp[2], exp[3], exp[4], exp[5], exp[6], episode)
 
         # Register the actual experience
         for exp in episode_exp:
-            self.exp_buffer.add(exp[0], exp[1], exp[2], exp[3], exp[4], episode)
+            #self.exp_buffer.add(exp[0], exp[1], exp[2], exp[3], exp[4], episode)
+            self.exp_buffer.add(exp[0], exp[1], exp[2], exp[3], exp[4], exp[5], exp[6], episode)
 
     def _save_hyperparameters(self, logpath, env, steps):
         try:
@@ -169,12 +171,15 @@ class DoubleDuelingRDQN(AgentWithConverter):
     def reset(self, observation):
         self._reset_state(observation)
 
-    def my_act(self, state, reward, done=False):
+    def my_act(self, state, reward, prev_a, prev_r, done=False):
+        state = np.concatenate([state, [prev_a, prev_r]])
         data_input = np.array(state)
-        data_input.reshape(1, 1, self.observation_size)
+        data_input.reshape(1, 1, self.observation_size+2)
         a, _, m, c = self.Qmain.predict_move(data_input,
                                              self.mem_state,
-                                             self.carry_state)
+                                             self.carry_state,
+                                             self.prev_action,
+                                             self.prev_reward)
         self.mem_state = m
         self.carry_state = c
 
@@ -262,12 +267,13 @@ class DoubleDuelingRDQN(AgentWithConverter):
             new_obs, reward, self.done, info = env.step(act)
             new_state = self.convert_obs(new_obs)
 
+
+            # Save to current episode experience
+            episode_exp.append((self.state, a, reward, self.done, new_state, self.prev_action, self.prev_reward))
+
             # 更新上一步的a,r
             self.prev_action = a;
             self.prev_reward = reward;
-
-            # Save to current episode experience
-            episode_exp.append((self.state, a, reward, self.done, new_state))
 
             # Train when pre-training is over
             if step >= num_pre_training_steps:
@@ -326,10 +332,20 @@ class DoubleDuelingRDQN(AgentWithConverter):
         batch_mem = np.zeros((self.batch_size, self.Qmain.h_size))
         batch_carry = np.zeros((self.batch_size, self.Qmain.h_size))
 
-        input_size = self.observation_size
+        input_size = self.observation_size+2
         m_data = np.vstack(batch[:, 0])
+        #添加当前时刻的上一步动作和上一步奖励
+        #m_data_prev_a = batch[:, 5]  # 第六列数据
+        m_data_prev_a = batch[:, 5].astype(float)  # 第六列数据
+        m_data_prev_r = batch[:, 6].astype(float)  # 第七列数据
+        m_data = np.hstack((m_data, m_data_prev_a[:, np.newaxis], m_data_prev_r[:, np.newaxis]))
         m_data = m_data.reshape(self.batch_size, self.trace_length, input_size)
+
         t_data = np.vstack(batch[:, 4])
+        # 添加下一状态的上一步动作和上一步奖励
+        t_data_prev_a = batch[:, 1].astype(float)  # 第二列数据
+        t_data_prev_r = batch[:, 2].astype(float)  # 第三列数据
+        t_data = np.hstack((t_data, t_data_prev_a[:, np.newaxis], t_data_prev_r[:, np.newaxis]))
         t_data = t_data.reshape(self.batch_size, self.trace_length, input_size)
         q_input = [
             copy.deepcopy(batch_mem),

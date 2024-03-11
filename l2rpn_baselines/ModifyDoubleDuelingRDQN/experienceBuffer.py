@@ -21,8 +21,9 @@ class ExperienceBuffer:
         self.buffer = [[]]
         self.current_episode = 0
 
-    def add(self, s, a, r, d, s2, e):
-        experience = np.reshape(np.array([s, a, r, d, s2],dtype=object), [1,5])
+    def add(self, s, a, r, d, s2, prev_a, prev_r, e):
+        #experience = np.reshape(np.array([s, a, r, d, s2],dtype=object), [1,5])
+        experience = np.reshape(np.array([s, a, r, d, s2, prev_a, prev_r], dtype=object), [1, 7])
 
         # New episode
         if self.current_episode < e:
@@ -67,7 +68,8 @@ class ExperienceBuffer:
             samples.append(sample)
 
         samples = np.array(samples)
-        return np.reshape(samples, [self.batch_size * self.trace_length, 5])
+        #return np.reshape(samples, [self.batch_size * self.trace_length, 5])
+        return np.reshape(samples, [self.batch_size * self.trace_length, 7])  # Adjusted shape to account for 7 elements per experience tuple
 
     def clear(self):
         self.buffer = [[]]
@@ -81,12 +83,15 @@ if __name__ == "__main__":
     rbuf = ExperienceBuffer(REPLAY_BUFFER_SIZE, BATCH_SIZE, TRACE_LENGTH)
     for ep_idx in range(BATCH_SIZE + 1):
         for t_idx in range(TRACE_LENGTH + 1): #range(np.random.randint(0, 32)):
-            rbuf.add([0] * 434, "a", "r", False, [4] * 434, ep_idx)
+            rbuf.add([0] * 434, "a", "r", False, [4] * 434, "prev_a", "prev_r", ep_idx)
             can_sample = rbuf.can_sample()
             buf_info = "ep_idx={}, t_idx={}, can_sample={}"
             print (buf_info.format(ep_idx, t_idx, str(can_sample)))
             if can_sample:
                 batch = rbuf.sample()
                 s2_batch = np.vstack(batch[:, 4])
-                s2_batch = s2_batch.reshape(BATCH_SIZE, TRACE_LENGTH, 434)
-                print (s2_batch.shape)
+                s2 = batch[:, 5]  # 第六列数据
+                s3 = batch[:, 6]  # 第七列数据
+                new_batch = np.hstack((s2_batch, s2[:, np.newaxis], s3[:, np.newaxis]))
+                new_batch = new_batch.reshape(BATCH_SIZE, TRACE_LENGTH, 436)
+                print (new_batch.shape)
