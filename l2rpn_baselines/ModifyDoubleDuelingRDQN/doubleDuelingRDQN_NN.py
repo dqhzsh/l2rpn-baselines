@@ -57,7 +57,7 @@ class DoubleDuelingRDQN_NN(object):
         #这行代码创建了一个名为input_mem_state的输入层，用于表示LSTM的初始隐藏状态。
         input_carry_state = tfk.Input(dtype=tf.float32, shape=(self.h_size), name='input_carry_state')
         #这行代码创建了一个名为 input_carry_state 的输入层，用于表示 LSTM 的初始细胞状态。
-        input_layer = tfk.Input(dtype=tf.float32, shape=(None, self.observation_size+2), name='input_obs')
+        input_layer = tfk.Input(dtype=tf.float32, shape=(None, self.observation_size+self.action_size+1), name='input_obs')
         #这行代码创建了一个名为 input_layer 的输入层，用于表示观测序列,这个输入层可以接受任何形状的张量作为输入，
         # 只要张量的最后一个维度与输入层的形状匹配即可。因此，不管输入的张量是一维、二维、三维或更高维度，都可以作为输入传递给模型。
         # dtype=tf.float32 指定了输入数据的数据类型为 32 位浮点数。
@@ -136,7 +136,9 @@ class DoubleDuelingRDQN_NN(object):
         self.dropout_rate.assign(float(rate))
         self.trace_length.assign(1)
 
-        data = np.concatenate([data, [prev_a, prev_r]])
+        # 将 prev_a 转换为 one-hot 向量
+        prev_a_one_hot = np.eye(self.action_size)[prev_a]
+        data = np.concatenate([data, prev_a_one_hot, [prev_r]])
         data_input = data.reshape(1, 1, -1)
         mem_input = mem.reshape(1, -1)
         carry_input = carry.reshape(1, -1)
@@ -151,7 +153,10 @@ class DoubleDuelingRDQN_NN(object):
         self.trace_length.assign(1)
         self.dropout_rate.assign(0.0)
 
-        data = np.concatenate([data, [prev_a, prev_r]])
+        # 将 prev_a 转换为 one-hot 向量
+        prev_a_one_hot = np.eye(self.action_size)[prev_a]
+        # concatenate 函数连接数组时，它会尝试将输入数组转换为相同的数据类型，如果 data 是一个浮点数类型的 NumPy 数组，那么 prev_a 和 prev_r 会被自动转换为浮点数类型。
+        data = np.concatenate([data, prev_a_one_hot, [prev_r]])
         data_input = data.reshape(1, 1, -1)
         mem_input = mem.reshape(1, -1)
         carry_input = carry.reshape(1, -1)
@@ -166,7 +171,9 @@ class DoubleDuelingRDQN_NN(object):
         self.trace_length.assign(1)
         self.dropout_rate.assign(0.0)
 
-        data = np.concatenate([data, [prev_a, prev_r]])
+        # 将 prev_a 转换为 one-hot 向量
+        prev_a_one_hot = np.eye(self.action_size)[prev_a]
+        data = np.concatenate([data, prev_a_one_hot, [prev_r]])
         data_input = data.reshape(1, 1, -1)
         mem_input = mem.reshape(1, -1)
         carry_input = carry.reshape(1, -1)

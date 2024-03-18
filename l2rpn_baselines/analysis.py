@@ -19,6 +19,36 @@ from grid2op.PlotGrid import PlotMatplot
 backend = LightSimBackend()
 env = grid2op.make("l2rpn_neurips_2020_track2_small", backend=backend)
 
+import random
+def random_task(env, N_task):
+    tasks = []
+    # Loop for N_task times
+    for _ in range(N_task):
+        # Randomly select an environment
+        mix_names = list(env.keys())
+        random_env_name = random.choice(mix_names)
+        random_env = env[random_env_name]
+
+        # Get all chronic names
+        all_chronics_paths = random_env.chronics_handler.subpaths
+        all_chronics_names = [path.split("\\")[-1] for path in all_chronics_paths]
+
+        # Randomly select a chronic
+        random_chronic_name = random.choice(all_chronics_names)
+
+        # Set the environment to the selected chronic
+        random_env.set_id(random_chronic_name)
+
+        # Reset the environment
+        random_env.reset()
+
+        tasks.append(random_env)
+
+    print(tasks)
+    print(tasks[2].chronics_handler.get_name())
+
+random_task(env,10)
+
 
 # list all available mixes:
 mixes_names = list(env.keys())

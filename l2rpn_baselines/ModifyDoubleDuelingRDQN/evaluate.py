@@ -29,8 +29,11 @@ DEFAULT_FILE = "./models\ModifyDoubleDuelingRDQN.tf"
 
 def cli():
     parser = argparse.ArgumentParser(description="Eval baseline DDDQN")
+    # parser.add_argument("--data_dir", required=False,
+    #                     default="rte_case14_realistic",
+    #                     help="Path to the dataset root directory")
     parser.add_argument("--data_dir", required=False,
-                        default="rte_case14_realistic",
+                        default="l2rpn_neurips_2020_track2_small",
                         help="Path to the dataset root directory")
     parser.add_argument("--load_file", required=False,
                         default=DEFAULT_FILE,

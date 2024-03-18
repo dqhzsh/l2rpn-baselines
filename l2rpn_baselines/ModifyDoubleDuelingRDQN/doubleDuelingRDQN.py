@@ -12,6 +12,7 @@ import os
 import json
 import copy
 import numpy as np
+import random
 try:
     import tensorflow as tf
     _CAN_USE_TENSORFLOW = True
@@ -64,6 +65,8 @@ class DoubleDuelingRDQN(AgentWithConverter):
         self.state = []
         self.mem_state = None
         self.carry_state = None
+        self.prev_action = None
+        self.prev_reward = None
 
         # Declare training vars
         self.exp_buffer = None
@@ -71,10 +74,6 @@ class DoubleDuelingRDQN(AgentWithConverter):
         self.epoch_rewards = None
         self.epoch_alive = None
         self.Qtarget = None
-
-        """"""
-        self.prev_action = 0
-        self.prev_reward = 0
 
         # Compute dimensions from intial state
         self.observation_size = self.observation_space.size_obs()
@@ -87,6 +86,9 @@ class DoubleDuelingRDQN(AgentWithConverter):
         # Setup training vars if needed
         if self.is_training:
             self._init_training()
+
+        # 初始化评估时当前状态的上一步动作值
+        self.prev_action_evaluate = 0
 
 
 
@@ -108,6 +110,9 @@ class DoubleDuelingRDQN(AgentWithConverter):
         self.done = False
         self.mem_state = np.zeros(self.Qmain.h_size)
         self.carry_state = np.zeros(self.Qmain.h_size)
+        # 添加初始化当前状态的上一步动作和奖励值
+        self.prev_action = 0
+        self.prev_reward = 0.0
 
     def _register_experience(self, episode_exp, episode):
         missing_obs = self.trace_length - len(episode_exp)
@@ -171,17 +176,18 @@ class DoubleDuelingRDQN(AgentWithConverter):
     def reset(self, observation):
         self._reset_state(observation)
 
-    def my_act(self, state, reward, prev_a, prev_r, done=False):
-        state = np.concatenate([state, [prev_a, prev_r]])
+    def my_act(self, state, reward,  done=False):
+        #state = np.concatenate([state, [self.prev_action_evaluate, reward]])
         data_input = np.array(state)
-        data_input.reshape(1, 1, self.observation_size+2)
+        data_input.reshape(1, 1, self.observation_size)
         a, _, m, c = self.Qmain.predict_move(data_input,
                                              self.mem_state,
                                              self.carry_state,
-                                             self.prev_action,
-                                             self.prev_reward)
+                                             self.prev_action_evaluate,
+                                             reward)
         self.mem_state = m
         self.carry_state = c
+        self.prev_action_evaluate = a
 
         return a
     
@@ -192,6 +198,31 @@ class DoubleDuelingRDQN(AgentWithConverter):
 
     def save(self, path):
         self.Qmain.save_network(path)
+
+    def random_task(env, N_task):
+        tasks = []
+        # Loop for N_task times
+        for _ in range(N_task):
+            # Randomly select an environment
+            mix_names = list(env.keys())
+            random_env_name = random.choice(mix_names)
+            random_env = env[random_env_name]
+
+            # Get all chronic names
+            all_chronics_paths = random_env.chronics_handler.subpaths
+            all_chronics_names = [path.split("\\")[-1] for path in all_chronics_paths]
+
+            # Randomly select a chronic
+            random_chronic_name = random.choice(all_chronics_names)
+
+            # Set the environment to the selected chronic
+            random_env.set_id(random_chronic_name)
+
+            # Reset the environment
+            random_env.reset()
+
+            tasks.append(random_env)
+            return tasks
 
     ## Training Procedure
     def train(self, env,
@@ -332,20 +363,23 @@ class DoubleDuelingRDQN(AgentWithConverter):
         batch_mem = np.zeros((self.batch_size, self.Qmain.h_size))
         batch_carry = np.zeros((self.batch_size, self.Qmain.h_size))
 
-        input_size = self.observation_size+2
+        input_size = self.observation_size+self.action_size+1
         m_data = np.vstack(batch[:, 0])
         #添加当前时刻的上一步动作和上一步奖励
-        #m_data_prev_a = batch[:, 5]  # 第六列数据
-        m_data_prev_a = batch[:, 5].astype(float)  # 第六列数据
+        m_data_prev_a = batch[:, 5].astype(int)  # 第六列数据
+        m_data_prev_a_one_hot = np.eye(self.action_size)[m_data_prev_a]
         m_data_prev_r = batch[:, 6].astype(float)  # 第七列数据
-        m_data = np.hstack((m_data, m_data_prev_a[:, np.newaxis], m_data_prev_r[:, np.newaxis]))
+        #m_data = np.hstack((m_data, m_data_prev_a_one_hot, m_data_prev_r[:, np.newaxis]))
+        m_data = np.concatenate((m_data, m_data_prev_a_one_hot, m_data_prev_r[:, np.newaxis]), axis=1)
         m_data = m_data.reshape(self.batch_size, self.trace_length, input_size)
 
         t_data = np.vstack(batch[:, 4])
         # 添加下一状态的上一步动作和上一步奖励
-        t_data_prev_a = batch[:, 1].astype(float)  # 第二列数据
+        t_data_prev_a = batch[:, 1].astype(int)  # 第二列数据
+        t_data_prev_a_one_hot = np.eye(self.action_size)[t_data_prev_a]
         t_data_prev_r = batch[:, 2].astype(float)  # 第三列数据
-        t_data = np.hstack((t_data, t_data_prev_a[:, np.newaxis], t_data_prev_r[:, np.newaxis]))
+        #t_data = np.hstack((t_data, t_data_prev_a[:, np.newaxis], t_data_prev_r[:, np.newaxis]))
+        t_data = np.concatenate((t_data, t_data_prev_a_one_hot, t_data_prev_r[:, np.newaxis]), axis=1)
         t_data = t_data.reshape(self.batch_size, self.trace_length, input_size)
         q_input = [
             copy.deepcopy(batch_mem),
