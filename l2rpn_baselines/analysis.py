@@ -15,9 +15,29 @@ from grid2op.PlotGrid import PlotMatplot
 
 #help(grid2op.PlotGrid.PlotMatplot)
 
+
+
 # Create the environment
 backend = LightSimBackend()
 env = grid2op.make("l2rpn_neurips_2020_track2_small", backend=backend)
+
+print(dir(env))
+if hasattr(env, '_helper_action_player'):
+    print(f"{env} 对象具有 _helper_action_player 属性")
+else:
+    print(f"{env} 对象没有 _helper_action_player 属性")
+
+
+print(dir(env.action_space))
+
+env_1 =grid2op.make("l2rpn_case14_sandbox", backend=backend)
+print(dir(env_1))
+if hasattr(env_1, '_init_grid_path'):
+    print(f"{env_1} 对象具有 _init_grid_path 属性")
+else:
+    print(f"{env_1} 对象没有 _init_grid_path 属性")
+
+
 
 import random
 def random_task(env, N_task):
