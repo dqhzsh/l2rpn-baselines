@@ -21,24 +21,36 @@ from grid2op.PlotGrid import PlotMatplot
 backend = LightSimBackend()
 env = grid2op.make("l2rpn_neurips_2020_track2_small", backend=backend)
 
-print(dir(env))
-if hasattr(env, '_helper_action_player'):
-    print(f"{env} 对象具有 _helper_action_player 属性")
-else:
-    print(f"{env} 对象没有 _helper_action_player 属性")
+# print(dir(env))
+# if hasattr(env, '_helper_action_player'):
+#     print(f"{env} 对象具有 _helper_action_player 属性")
+# else:
+#     print(f"{env} 对象没有 _helper_action_player 属性")
+#
+#
+# print(dir(env.action_space))
+#
+# env_1 =grid2op.make("l2rpn_case14_sandbox", backend=backend)
+# print(dir(env_1))
+# if hasattr(env_1, '_init_grid_path'):
+#     print(f"{env_1} 对象具有 _init_grid_path 属性")
+# else:
+#     print(f"{env_1} 对象没有 _init_grid_path 属性")
 
 
-print(dir(env.action_space))
+# import random
+# for _ in range(10):
+#     env = grid2op.make("l2rpn_neurips_2020_track2_small",chronics_path=r"C:\Users\dqh\data_grid2op\l2rpn_neurips_2020_track2_small\l2rpn_neurips_2020_track2_x1\chronics")
+#     print(env.env_name)
+#     env.reset()
+#     env.chronics_handler.tell_id(random.randint(0, 119))
+#     #print(dir(env.chronics_handler.real_data))
+#     print("Thread number:", _, ", ID of chronic current folder:", env.chronics_handler.real_data.get_id())
 
-env_1 =grid2op.make("l2rpn_case14_sandbox", backend=backend)
-print(dir(env_1))
-if hasattr(env_1, '_init_grid_path'):
-    print(f"{env_1} 对象具有 _init_grid_path 属性")
-else:
-    print(f"{env_1} 对象没有 _init_grid_path 属性")
 
 
-
+backend = LightSimBackend()
+env = grid2op.make("l2rpn_neurips_2020_track2_small", backend=backend)
 import random
 def random_task(env, N_task):
     tasks = []
@@ -49,25 +61,30 @@ def random_task(env, N_task):
         random_env_name = random.choice(mix_names)
         random_env = env[random_env_name]
 
-        # Get all chronic names
-        all_chronics_paths = random_env.chronics_handler.subpaths
-        all_chronics_names = [path.split("\\")[-1] for path in all_chronics_paths]
+        # # Get all chronic names
+        # all_chronics_paths = random_env.chronics_handler.subpaths
+        # all_chronics_names = [path.split("\\")[-1] for path in all_chronics_paths]
+        #
+        # # Randomly select a chronic
+        # random_chronic_name = random.choice(all_chronics_names)
+        #
+        # # Set the environment to the selected chronic
+        # random_env.set_id(random_chronic_name)
 
-        # Randomly select a chronic
-        random_chronic_name = random.choice(all_chronics_names)
-
-        # Set the environment to the selected chronic
-        random_env.set_id(random_chronic_name)
-
+        print(random_env.env_name)
+        random_env.chronics_handler.tell_id(random.randint(0, 119))
+        # print(dir(env.chronics_handler.real_data))
+        print("Thread number:", _, ", ID of chronic current folder:", random_env.chronics_handler.real_data.get_id())
         # Reset the environment
         random_env.reset()
 
-        tasks.append(random_env)
+        tasks.append(random_env.chronics_handler.get_name())
 
     print(tasks)
-    print(tasks[2].chronics_handler.get_name())
+    #print(tasks[2].chronics_handler.get_name())
 
 random_task(env,10)
+
 
 
 # list all available mixes:
