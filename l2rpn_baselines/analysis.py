@@ -86,7 +86,6 @@ def random_task(env, N_task):
 random_task(env,10)
 
 
-
 # list all available mixes:
 mixes_names = list(env.keys())
 print(list(env.keys()))
