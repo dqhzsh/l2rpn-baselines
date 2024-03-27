@@ -5,30 +5,12 @@ try:
     from grid2op.Parameters import Parameters
     from grid2op.Reward import L2RPNReward, CombinedReward, CloseToOverflowReward, GameplayReward
     import sys
-    from l2rpn_baselines.AsynchronousActorCritic.AsynchronousActorCritic import A3CAgent
-    from l2rpn_baselines.AsynchronousActorCritic.Action_reduced_list import main_function
-    from l2rpn_baselines.AsynchronousActorCritic.user_environment_make import set_environement
+    from l2rpn_baselines.AsynchronousActorCritic_init.AsynchronousActorCritic import A3CAgent
+    from l2rpn_baselines.AsynchronousActorCritic_init.user_environment_make import set_environement
     # import pytorch
 except ImportError as exc_:
     raise ImportError("AsynchronousActorCritic baseline impossible to load the required dependencies for training the model. The error was: \n {}".format(exc_))
 
-# from ActorCritic_Agent import *
-# import Action_reduced_list
-# import user_environment_make
-
-# This below function reduces the size of the state space.
-def useful_state(obs,value_multiplier):
-    selected_obs = np.hstack((obs.topo_vect,obs.line_status))
-    selected_obs = np.hstack((selected_obs,obs.load_p/100))#
-    selected_obs = np.hstack((selected_obs,obs.load_q/100))
-    selected_obs = np.hstack((selected_obs,obs.prod_p/100))
-    selected_obs = np.hstack((selected_obs,obs.prod_v/value_multiplier))
-    selected_obs = np.hstack((selected_obs,obs.rho))
-    # selected_obs = np.hstack((selected_obs,obs.day))
-    selected_obs = np.hstack((selected_obs,obs.hour_of_day/24))
-    selected_obs = np.hstack((selected_obs,obs.minute_of_hour/60))
-    # selected_obs = np.hstack((selected_obs,obs.day_of_week/7))
-    return selected_obs
 
 def train(env,name,iterations,save_path,load_path,env_name,profiles_chronics,time_step_end,Hyperparameters,Thread_count):
     """
@@ -55,29 +37,13 @@ def train(env,name,iterations,save_path,load_path,env_name,profiles_chronics,tim
     env_temp = set_environement(None, env_name, profiles_chronics)
 
     # Define the size of state space and action space.
-    do_nothing_act = env_temp._helper_action_player({})
+    state_size = env_temp.observation_space.size()
 
-    obs, reward, done, info = env_temp.step(do_nothing_act)
-    #conversion parameter
-    value_multiplier = env_temp.backend.prod_pu_to_kv
-    state_trimmed = useful_state(obs,value_multiplier)
-    state_trimmed = state_trimmed.reshape([1,state_trimmed.size])
-    state_size = state_trimmed.size
-
-    # NOTE: Delete the .npy files if you are trying to solve for different bus system than previous solved power system
-    # This code is implemented for a 14 bus system.
-
-    # Reduce the action space and assign an index value to each unique possible action from the complete action space.
-    gen_action_list, load_action_list, line_or_action_list, line_ex_action_list = main_function("14")
-    action_size = load_action_list.__len__()
     action_space = env_temp.action_space
-    del env_temp
-
-    # Get the action space details as lists.
-    action_space_lists = [gen_action_list, load_action_list, line_or_action_list, line_ex_action_list]
+    print(action_space.size())
 
     # Create an agent architecture.
-    global_agent = A3CAgent(state_size, action_size,env_name,action_space,value_multiplier,action_space_lists,
+    global_agent = A3CAgent(state_size, action_space, env_name,
                             profiles_chronics,iterations,time_step_end,Hyperparameters,Thread_count,train_flag=True,
                             save_path=save_path)
 
@@ -100,7 +66,8 @@ def train(env,name,iterations,save_path,load_path,env_name,profiles_chronics,tim
 
 if __name__ == "__main__":
     # Name of the ".h5" files that stores the actor and critic neural network weights.
-    name = "grid2op_14_a3c"
+    #name = "grid2op_14_a3c"
+    name = "l2rpn_2020_track2"
     # Total number of episodes to train the A3C agent.
     EPISODES_train = 100000
     # Maximum number of time steps or iterations taken in each episode during the training.
@@ -125,9 +92,11 @@ if __name__ == "__main__":
     # env = user_environment_make.set_environement(None, env_name, profiles_chronics)
 
     # Name of the Grid2Op environment to train the A3C RL agent on.
-    env_name = 'l2rpn_case14_sandbox'
+    #env_name = 'l2rpn_case14_sandbox'
+    env_name = 'l2rpn_neurips_2020_track2_small'
     # Location of the chronic files. Change this to your chronics location.
-    profiles_chronics = r"C:\Users\dqh\data_grid2op\l2rpn_case14_sandbox\chronics"
+    #profiles_chronics = r"C:\Users\dqh\data_grid2op\l2rpn_case14_sandbox\chronics"
+    profiles_chronics = r"C:\Users\dqh\data_grid2op\l2rpn_neurips_2020_track2_small\l2rpn_neurips_2020_track2_x1\chronics"
     print("_____________________________________________")
     print("NOTE: PLEASE MAKE CHANGES TO THE FILE user_environment_make.py TO MAKE YOUR ENVIRONMENT. This "
           "user_environment_make.py will be called wherever it is necessary when training the A3C agent")

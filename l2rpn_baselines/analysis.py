@@ -38,14 +38,16 @@ env = grid2op.make("l2rpn_neurips_2020_track2_small", backend=backend)
 #     print(f"{env_1} 对象没有 _init_grid_path 属性")
 
 
-# import random
-# for _ in range(10):
-#     env = grid2op.make("l2rpn_neurips_2020_track2_small",chronics_path=r"C:\Users\dqh\data_grid2op\l2rpn_neurips_2020_track2_small\l2rpn_neurips_2020_track2_x1\chronics")
-#     print(env.env_name)
-#     env.reset()
-#     env.chronics_handler.tell_id(random.randint(0, 119))
-#     #print(dir(env.chronics_handler.real_data))
-#     print("Thread number:", _, ", ID of chronic current folder:", env.chronics_handler.real_data.get_id())
+import random
+for _ in range(10):
+    env = grid2op.make("l2rpn_neurips_2020_track2_small",chronics_path=r"C:\Users\dqh\data_grid2op\l2rpn_neurips_2020_track2_small\l2rpn_neurips_2020_track2_x1\chronics")
+    print(env.observation_space.size_obs())
+    print(env.action_space.size())
+    print(env.env_name)
+    env.reset()
+    env.chronics_handler.tell_id(random.randint(0, 119))
+    #print(dir(env.chronics_handler.real_data))
+    print("Thread number:", _, ", ID of chronic current folder:", env.chronics_handler.real_data.get_id())
 
 
 

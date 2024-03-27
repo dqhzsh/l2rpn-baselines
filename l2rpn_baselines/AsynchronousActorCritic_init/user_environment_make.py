@@ -1,17 +1,30 @@
 from grid2op import make
 from grid2op.Parameters import Parameters
-from grid2op.Reward import L2RPNReward, CombinedReward, CloseToOverflowReward, GameplayReward
+from grid2op.Reward import *
+from grid2op.Action import *
 
 def set_environement(start_id,env_name,profiles_chronics):
     param = Parameters()
     param.NO_OVERFLOW_DISCONNECTION = True
 
-    env = make(env_name,chronics_path= profiles_chronics, reward_class=CombinedReward,param=param)
+    env = make(env_name,chronics_path= profiles_chronics, reward_class=CombinedScaledReward)
+
     # Register custom reward for training
     cr = env._reward_helper.template_reward
+    cr.addReward("reco", LinesReconnectedReward(), 50.0)
     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
     cr.addReward("game", GameplayReward(), 100.0)
+    cr.addReward("redisp", RedispReward(), 1e-3)
+    cr.set_range(-1.0, 1.0)
+    # Initialize custom rewards
     cr.initialize(env)
+
+    # env = make(env_name,chronics_path= profiles_chronics, reward_class=CombinedReward,param=param)
+    # # Register custom reward for training
+    # cr = env._reward_helper.template_reward
+    # cr.addReward("overflow", CloseToOverflowReward(), 50.0)
+    # cr.addReward("game", GameplayReward(), 100.0)
+    # cr.initialize(env)
 
     # Debug prints
     print("Debug prints --->:")

@@ -11,15 +11,19 @@ try:
     from grid2op.Environment import Environment
     from grid2op.Parameters import Parameters
     from grid2op.Reward import L2RPNReward, CombinedReward, CloseToOverflowReward, GameplayReward
+    from grid2op.Agent import AgentWithConverter
+    from grid2op.Converter import IdToAct
 
     import tensorflow.compat.v1 as tf
     tf.disable_v2_behavior()
+
+    import tensorflow
 
     from tensorflow.keras.layers import Dense, Input
     from tensorflow.keras.models import Model
     from tensorflow.keras.optimizers import Adam
     import tensorflow.python.keras.backend as K
-    from l2rpn_baselines.AsynchronousActorCritic.user_environment_make import set_environement
+    from l2rpn_baselines.AsynchronousActorCritic_init.user_environment_make import set_environement
     # import user_environment_make
 except ImportError as exc_:
     raise ImportError("AsynchronousActorCritic baseline impossible to load the required dependencies for training the model. The error was: \n {}".format(exc_))
@@ -28,20 +32,20 @@ except ImportError as exc_:
 # import user_environment_make
 
 # Create the Agent instance here that can used with the Runner to test the performance of the trained RL agent.
-class A3CAgent(MLAgent):
+class A3CAgent(AgentWithConverter):
     # first change: An Agent must derived from grid2op.Agent (in this case MLAgent, because we manipulate vector instead
     # of classes) We will use this template to create our desired ML agent with unique neural network configuration.
-    def __init__(self, state_size, action_size, env_name, action_space, value_multiplier,action_space_lists,
-                 profiles_chronics,EPISODES_train2,time_step_end2,Hyperparameters,Thread_count,train_flag,save_path):
-        MLAgent.__init__(self, action_space)
+    def __init__(self, state_size, action_space, env_name,
+                 profiles_chronics, EPISODES_train2, time_step_end2, Hyperparameters, Thread_count, train_flag,save_path):
+        AgentWithConverter.__init__(self, action_space, action_space_converter=IdToAct)
         # Parameter settings.
         # NOTE: MAKE SURE THE FOLLOWING SETTINGS ARE SAME AS THE TRAINED AGENT OR THE WEIGHTS WONT LOAD SUCCESSFULLY.
         # get size of state and action
         self.state_size = state_size
-        self.action_size = action_size
+        self.action_size = action_space.size()
+        self.action_space = action_space
         # get gym environment name
         self.env_name = env_name
-        self.denominator = value_multiplier
 
         if train_flag:
             # these are hyper parameters for the A3C
@@ -79,11 +83,13 @@ class A3CAgent(MLAgent):
         K.set_session(self.sess)
         self.sess.run(tf.global_variables_initializer())
 
-        self.action_space_lists = action_space_lists
-        self.gen_action_list = action_space_lists[0]
-        self.load_action_list = action_space_lists[1]
-        self.line_or_action_list = action_space_lists[2]
-        self.line_ex_action_list = action_space_lists[3]
+
+    def my_act(self, state, reward, done=False):
+        # state = state.to_vect()  # 直接使用原始状态向量
+        state = np.array(state)
+        state = state.reshape([1, state.size])
+        action = self.get_action(state)
+        return action
 
     # approximate policy and value using Neural Network
     # actor -> state is input and probability of each action is output of network
@@ -107,95 +113,22 @@ class A3CAgent(MLAgent):
         actor._make_predict_function()
         critic._make_predict_function()
 
-        # actor.summary()
-        # critic.summary()
-
         return actor, critic
 
-    def act(self, state_as_dict, reward, done=False):
-        state = useful_state(state_as_dict,self.denominator)
-        state = state.reshape([1,state.size])
-        action_index = self.get_action(state_as_dict,state)
-
-        # Creates the action "object". If we use "print(action)" then it is readable.
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list,
-                                         action_index,None, None)
-        # print(action)
-        # self.action_list.append(action)
+    def act(self, state, reward, done=False):
+        #state = state.to_vect()  # 直接使用原始状态向量
+        state = np.array(state)
+        state = state.reshape([1, state.size])
+        action = self.get_action(state)
         return action
 
-    def create_action_dict(self,gen_action_list, load_action_list, line_or_action_list, line_ex_action_list, action_index, episode, flag):
-        action = self.action_space(
-        {"change_bus": {"generators_id": gen_action_list[action_index], "loads_id": load_action_list[action_index],
-                        "lines_or_id": line_or_action_list[action_index],
-                        "lines_ex_id": line_ex_action_list[action_index]}})
-        return action
+    def get_action(self, state):
+        # 使用神经网络预测动作概率
+        policy = self.actor.predict(state, batch_size=1).flatten()
 
-    def get_action(self, state_as_dict, state):
-        with self.sess.as_default():
-            with self.sess.graph.as_default():
-                # Predict the action using the internal neural network
-                policy = self.actor.predict(state,batch_size=1).flatten()
-
-        # Select first 4 best possible actions from the neural nets.
-        policy_chosen_list = np.random.choice(self.action_size, 4, p=policy)
-
-        # Simulate the impact of these actions and pick the best action that maximizes the reward.
-        # (one-step lookahead).
-        action_index = policy_chosen_list[0]
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, None, None)
-        obs_0, rw_0, done_0, _  = state_as_dict.simulate(action)
-
-        action_index = policy_chosen_list[1]
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, None, None)
-        obs_1, rw_1, done_1, _  = state_as_dict.simulate(action)
-
-        action_index = policy_chosen_list[2]
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, None, None)
-        obs_2, rw_2, done_2, _  = state_as_dict.simulate(action)
-
-        action_index = policy_chosen_list[3]
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, None, None)
-        obs_3, rw_3, done_3, _  = state_as_dict.simulate(action)
-
-        return policy_chosen_list[np.argmax([rw_0,rw_1,rw_2,rw_3])]
-
-    # make loss function for Policy Gradient
-    # [log(action probability) * advantages] will be input for the back prop
-    # we add entropy of action probability to loss
-    # def actor_optimizer(self):
-    #     action = K.placeholder(shape=(None, self.action_size))
-    #     advantages = K.placeholder(shape=(None, ))
-    #
-    #     policy = self.actor.output
-    #
-    #     good_prob = K.sum(action * policy, axis=1)
-    #     eligibility = K.log(good_prob + 1e-10) * K.stop_gradient(advantages)
-    #     loss = -K.sum(eligibility)
-    #
-    #     entropy = K.sum(policy * K.log(policy + 1e-10), axis=1)
-    #
-    #     actor_loss = loss + 0.01*entropy
-    #
-    #     #optimizer = Adam(lr=self.actor_lr)
-    #     optimizer = tf.keras.optimizers.Adam(learning_rate=self.actor_lr)
-    #     # updates = optimizer.get_updates(params=self.actor.trainable_weights, constraints=[],loss=actor_loss)
-    #     updates = optimizer.get_updates(params=self.actor.trainable_weights, loss=actor_loss)
-    #     train = K.function([self.actor.input, action, advantages], tf.compat.v1.convert_to_tensor([]),updates=updates)
-    #
-    # # make loss function for Value approximation
-    # def critic_optimizer(self):
-    #     discounted_reward = K.placeholder(shape=(None, ))
-    #
-    #     value = self.critic.output
-    #
-    #     loss = K.mean(K.square(discounted_reward - value))
-    #
-    #     optimizer = Adam(lr=self.critic_lr)
-    #     # updates = optimizer.get_updates(params=self.critic.trainable_weights, constraints=[],loss=loss)
-    #     updates = optimizer.get_updates(params=self.critic.trainable_weights, loss=loss)
-    #     train = K.function([self.critic.input, discounted_reward], tf.compat.v1.convert_to_tensor([]), updates=updates)
-    #     return train
+        # 随机选择动作
+        action_index = np.random.choice(self.action_size, p=policy)
+        return action_index
 
     def actor_optimizer(self):
         action = K.placeholder(shape=(None, self.action_size))
@@ -236,7 +169,7 @@ class A3CAgent(MLAgent):
     # make agents(local) and start training
     def train(self, nn_weights_name):
         agents = [Agent(i, self.actor, self.critic, self.optimizer, self.env_name, self.discount_factor,
-                        self.action_size, self.state_size, self.action_space_lists, self.profiles_chronics, self.sess) for i in range(self.threads)]
+                        self.action_space, self.state_size, self.profiles_chronics, self.sess) for i in range(self.threads)]
 
         for agent in agents:
             agent.start()
@@ -260,7 +193,7 @@ class A3CAgent(MLAgent):
 
 # This is Agent(local) class for threading
 class Agent(threading.Thread):
-    def __init__(self, index, actor, critic, optimizer, env_name, discount_factor, action_size, state_size, action_space_lists,profiles_chronics,session):
+    def __init__(self, index, actor, critic, optimizer, env_name, discount_factor, action_space, state_size, profiles_chronics, session):
         threading.Thread.__init__(self)
 
         self.states = []
@@ -273,14 +206,11 @@ class Agent(threading.Thread):
         self.optimizer = optimizer
         self.env_name = env_name
         self.discount_factor = discount_factor
-        self.action_size = action_size
+        self.action_size = action_space.size()
         self.state_size = state_size
         self.session = session
+        self.action_space = action_space
 
-        self.gen_action_list = action_space_lists[0]
-        self.load_action_list = action_space_lists[1]
-        self.line_or_action_list = action_space_lists[2]
-        self.line_ex_action_list = action_space_lists[3]
         self.profiles_chronics = profiles_chronics
 
     # Thread interactive with environment
@@ -288,13 +218,11 @@ class Agent(threading.Thread):
         global episode
         episode = 0
         env = set_environement(self.index,self.env_name,self.profiles_chronics)
-        self.action_space = env._helper_action_player
         while episode < EPISODES_train:
             state = env.reset()
-            state_as_dict = copy.deepcopy(state)
             # state = copy.deepcopy(np.reshape(state.to_vect(), [1, self.state_size]))
-            state = useful_state(state_as_dict,env.backend.prod_pu_to_kv)
-            state = state.reshape([1,state.size])
+            state = self.convert_obs(state)
+            state = state.reshape([1, state.size])
             score = 0
             time_step = 0
             max_action = 0
@@ -309,35 +237,29 @@ class Agent(threading.Thread):
                 else:
                     epison_flag = False
                     if time_step%1 == 0:# or max(state_as_dict.rho)>0.75:
-                        action_index = self.get_action(state_as_dict,state)
+                        action_index = self.get_action(state)
                     else:
                         action_index = 0
 
-                action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, episode, flag=1)
-
-                # print(action)
-
+                convert_instance = convert(env.observation_space, self.action_space)
+                action = convert_instance.convert_act(action_index)
                 next_state, reward, done, flag = env.step(action)
-                state_as_dict = copy.deepcopy(next_state)
-                time_hour = state_as_dict.day*10000 + state_as_dict.hour_of_day * 100+ state_as_dict.minute_of_hour
+                time_hour = next_state.day*10000 + next_state.hour_of_day * 100 + next_state.minute_of_hour
                 # next_state = np.reshape(next_state.to_vect(), [1, self.state_size]) if not done else np.zeros([1, self.state_size])
-                next_state = useful_state(next_state,env.backend.prod_pu_to_kv)
+                next_state = self.convert_obs(next_state)
+                next_state = np.array(next_state)
                 next_state = next_state.reshape([1,next_state.size])
                 # next_state = observation_space.array_to_observation(next_state).as_minimalist().as_array()
                 # score += (reward-0.1*(next_state[1]*next_state[1]+next_state[3]*next_state[3])) # reducing the reward based on speed...
                 score += reward if not done else -100*(1+np.sqrt(episode)/10)
-                non_zero_actions += 0 if action_index==0 else 1
-                # if flag == None:
-                #     self.memory(state, action, reward)
-                # else:
-                #     score -= 10 if flag.is_empty else 0
-                #     self.memory(state, action, 0)
+                non_zero_actions += 0 if action_index == 0 else 1
+
                 self.memory(state, action_index, reward if not done else -100*(1+np.sqrt(episode)/10))
 
                 state = copy.deepcopy(next_state) if not done else np.zeros([1, self.state_size])
 
                 time_step += 1
-                max_action = max(max_action,action_index)
+                max_action = max(max_action, action_index)
 
                 if done or time_step > time_step_end:
                     if done:
@@ -402,98 +324,56 @@ class Agent(threading.Thread):
                 action_as_tensor = tf.compat.v1.convert_to_tensor(np.asarray(self.actions))
                 advantage_as_tensor = tf.compat.v1.convert_to_tensor(np.asarray(advantages))
                 # reshaped_state_as_tensor = tf.compat.v1.reshape(state_as_tensor,self.actor.input.shape.dims)
+
                 self.optimizer[0]([state_as_tensor, action_as_tensor, advantage_as_tensor])
                 self.optimizer[1]([state_as_tensor, discounted_rewards])
                 self.states, self.actions, self.rewards = [], [], []
 
 
-    def get_action(self, state_as_dict, state):
+
+    def get_action(self, state):
         with self.session.as_default():
             with self.session.graph.as_default():
-                # Predict the action using the internal neural network
-                policy = self.actor.predict(state,batch_size=1).flatten()
+            # 使用神经网络预测动作概率
+                policy = self.actor.predict(state, batch_size=1).flatten()
+        # 随机选择动作
+        action_index = np.random.choice(self.action_size, p=policy)
+        return action_index
 
-        # Select first 4 best possible actions from the neural nets.
-        policy_chosen_list = np.random.choice(self.action_size, 4, p=policy)
+    def convert_obs(self, observation):
+        # Made a custom version to normalize per attribute
+        #return observation.to_vect()
+        li_vect=  []
+        for el in observation.attr_list_vect:
+            v = observation._get_array_from_attr_name(el).astype(float)
+            v_fix = np.nan_to_num(v)
+            v_norm = np.linalg.norm(v_fix)
+            if v_norm > 1e6:
+                v_res = (v_fix / v_norm) * 10.0
+            else:
+                v_res = v_fix
+            li_vect.append(v_res)
+        return np.concatenate(li_vect)
 
-        # Simulate the impact of these actions and pick the best action that maximizes the reward.
-        # (one-step lookahead).
-        action_index = policy_chosen_list[0]
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, episode, flag=0)
-        obs_0, rw_0, done_0, _  = state_as_dict.simulate(action)
+class convert(AgentWithConverter):
+    def __init__(self,
+                 observation_space,
+                 action_space,
+                 name=__name__):
 
-        action_index = policy_chosen_list[1]
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, episode, flag=0)
-        obs_1, rw_1, done_1, _  = state_as_dict.simulate(action)
+        # Call parent constructor
+        AgentWithConverter.__init__(self, action_space,
+                                    action_space_converter=IdToAct)
 
-        action_index = policy_chosen_list[2]
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, episode, flag=0)
-        obs_2, rw_2, done_2, _  = state_as_dict.simulate(action)
+        # Store constructor params
+        self.observation_space = observation_space
+        self.name = name
+    def convert_act(self, action):
+        return super().convert_act(action)
 
-        action_index = policy_chosen_list[3]
-        action = self.create_action_dict(self.gen_action_list, self.load_action_list, self.line_or_action_list, self.line_ex_action_list, action_index, episode, flag=0)
-        obs_3, rw_3, done_3, _  = state_as_dict.simulate(action)
-
-        return policy_chosen_list[np.argmax([rw_0,rw_1,rw_2,rw_3])]
-
-    def create_action_dict(self,gen_action_list, load_action_list, line_or_action_list, line_ex_action_list, action_index, episode, flag):
-        action = self.action_space(
-        {"change_bus": {"generators_id": gen_action_list[action_index], "loads_id": load_action_list[action_index],
-                        "lines_or_id": line_or_action_list[action_index],
-                        "lines_ex_id": line_ex_action_list[action_index]}})
-        # if flag == 1:
-        #     print("_______________________________________________________________________________________________________")
-        #     print("thread number ", self.index," Executed action index in environment step:", action_index," at episode:", episode)
-        #     # print(action)
-        #     print("_______________________________________________________________________________________________________")
-        # else:
-        #     print("_______________________________________________________________________________________________________")
-        #     print("thread number ", self.index," Executed action index at simulate step:", action_index," at episode:", episode)
-        #     # print(action)
-        #     print("_______________________________________________________________________________________________________")
+    def my_act(self, state, reward, done=False):
+        # state = state.to_vect()  # 直接使用原始状态向量
+        state = np.array(state)
+        state = state.reshape([1, state.size])
+        action = self.get_action(state)
         return action
-
-# def set_environement(start_id,env_name,profiles_chronics):
-#     param = Parameters()
-#     param.NO_OVERFLOW_DISCONNECTION = True
-#
-#     env = make(env_name,chronics_path= profiles_chronics, reward_class=CombinedReward,param=param)
-#     # Register custom reward for training
-#     cr = env.reward_helper.template_reward
-#     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
-#     cr.addReward("game", GameplayReward(), 100.0)
-#     cr.initialize(env)
-#
-#     # Debug prints
-#     print("Debug prints --->:")
-#     print("Chronics location that being used:", env.chronics_handler.path)
-#     print("Grid location being used:", env.init_grid_path)
-#     print("Reward class that is being used:", env.rewardClass)
-#     print("Action type class being used:", env.actionClass)
-#     print("Observation type class being used:", env.observationClass)
-#     print("Backend CSV file key names:", env.names_chronics_to_backend)
-#     print("Legal action class being used:", env.legalActClass)
-#     print("Voltage controller class being used:", env.voltagecontrolerClass)
-#
-#     if start_id != None:
-#         env.chronics_handler.tell_id(start_id)
-#         print("Thread number:",start_id,", ID of chronic current folder:",env.chronics_handler.real_data.id_chron_folder_current)
-#     return env
-
-# This below function reduces the size of the state space.
-def useful_state(obs,value_multiplier):
-    selected_obs = np.hstack((obs.topo_vect,obs.line_status))
-    selected_obs = np.hstack((selected_obs,obs.load_p/100))#
-    selected_obs = np.hstack((selected_obs,obs.load_q/100))
-    selected_obs = np.hstack((selected_obs,obs.prod_p/100))
-    selected_obs = np.hstack((selected_obs,obs.prod_v/value_multiplier))
-    selected_obs = np.hstack((selected_obs,obs.rho))
-    # selected_obs = np.hstack((selected_obs,obs.day))
-    selected_obs = np.hstack((selected_obs,obs.hour_of_day/24))
-    selected_obs = np.hstack((selected_obs,obs.minute_of_hour/60))
-    # selected_obs = np.hstack((selected_obs,obs.day_of_week/7))
-    return selected_obs
-
-
-
-
