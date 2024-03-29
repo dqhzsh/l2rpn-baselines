@@ -15,6 +15,8 @@ try:
     import tensorflow.compat.v1 as tf
     tf.disable_v2_behavior()
 
+    from tensorflow.keras.callbacks import TensorBoard
+
     from tensorflow.keras.layers import Dense, Input
     from tensorflow.keras.models import Model
     from tensorflow.keras.optimizers import Adam
@@ -283,6 +285,9 @@ class Agent(threading.Thread):
         self.line_ex_action_list = action_space_lists[3]
         self.profiles_chronics = profiles_chronics
 
+        # Agent类的__init__方法中，创建一个独立的日志写入对象
+        self.tf_writer = tf.compat.v1.summary.FileWriter("logs-train/thread_" + str(index))
+
     # Thread interactive with environment
     def run(self):
         global episode
@@ -395,6 +400,21 @@ class Agent(threading.Thread):
         values = np.reshape(values, len(values))
 
         advantages = discounted_rewards - values
+
+        mean_reward = np.mean(scores)
+        if len(scores) >= 50:
+            mean_reward_50 = np.mean(scores[-50:])
+        else:
+            mean_reward_50 = mean_reward
+
+        # 创建摘要对象
+        mean_reward_summary = tf.compat.v1.Summary()
+        # 添加平均奖励到摘要
+        mean_reward_summary.value.add(tag="mean_reward", simple_value=mean_reward)
+        mean_reward_summary.value.add(tag="mean_reward_50", simple_value=mean_reward_50)
+
+        # 将摘要添加到摘要写入器
+        self.tf_writer.add_summary(mean_reward_summary, episode)
 
         with self.session.as_default():
             with self.session.graph.as_default():

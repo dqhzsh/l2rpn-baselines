@@ -21,7 +21,7 @@ DEFAULT_NAME = "DoubleDuelingRDQN"
 DEFAULT_SAVE_DIR = "./models"
 DEFAULT_LOG_DIR = "./logs-train"
 DEFAULT_PRE_STEPS = 256
-DEFAULT_TRAIN_STEPS = 10000
+DEFAULT_TRAIN_STEPS = 100000
 #DEFAULT_TRAIN_STEPS = 5000000
 DEFAULT_TRACE_LEN = 12
 DEFAULT_BATCH_SIZE = 32
@@ -34,7 +34,7 @@ def cli():
     # Paths
     parser.add_argument("--name", default=DEFAULT_NAME,
                         help="The name of the model")
-    parser.add_argument("--data_dir", default="rte_case14_realistic",
+    parser.add_argument("--data_dir", default="l2rpn_case14_sandbox",
                         help="Path to the dataset root directory")
     parser.add_argument("--save_dir", required=False,
                         default=DEFAULT_SAVE_DIR, type=str,
@@ -102,6 +102,8 @@ def train(env,
                       name=name, 
                       is_training=True)
 
+    print(env.action_space.size())
+
     if load_path is not None:
         agent.load(load_path)
 
@@ -127,7 +129,7 @@ if __name__ == "__main__":
     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
     cr.addReward("game", GameplayReward(), 100.0)
     cr.addReward("redisp", RedispReward(), 1e-3)
-    cr.set_range(-10.0, 10.0)
+    cr.set_range(-1.0, 1.0)
     # Initialize custom rewards
     cr.initialize(env)
 

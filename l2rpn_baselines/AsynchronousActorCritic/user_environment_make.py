@@ -11,6 +11,7 @@ def set_environement(start_id,env_name,profiles_chronics):
     cr = env._reward_helper.template_reward
     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
     cr.addReward("game", GameplayReward(), 100.0)
+    cr.set_range(-10.0, 10.0)
     cr.initialize(env)
 
     # Debug prints

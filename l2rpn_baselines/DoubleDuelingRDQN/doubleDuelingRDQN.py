@@ -544,7 +544,7 @@ class DoubleDuelingRDQN(AgentWithConverter):
         # return observation.to_vect()
         li_vect = []
         for el in observation.attr_list_vect:
-            v = observation._get_array_from_attr_name(el).astype(np.float)
+            v = observation._get_array_from_attr_name(el).astype(float)
             v_fix = np.nan_to_num(v)
             v_norm = np.linalg.norm(v_fix)
             if v_norm > 1e6:
@@ -603,6 +603,7 @@ class DoubleDuelingRDQN(AgentWithConverter):
         self.tf_writer = tf.summary.create_file_writer(logpath, name=self.name)
         self._save_hyperparameters(save_path, env, num_steps)
 
+        print(self.action_size)
         # Training loop
         self._reset_state(env.current_obs)
         while step < num_steps:

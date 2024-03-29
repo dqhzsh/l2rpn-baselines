@@ -3,9 +3,9 @@
     "backend_type": "PandaPowerBackend_l2rpn_case14_sandbox",
     "chronics_max_timestep": "3000",
     "chronics_path": "C:\\Users\\dqh\\data_grid2op\\l2rpn_case14_sandbox\\chronics\\0000",
-    "cumulative_reward": 6965.01416015625,
+    "cumulative_reward": 1030.6041259765625,
     "env_seed": null,
     "env_type": "Environment_l2rpn_case14_sandbox",
     "grid_path": "C:\\Users\\dqh\\data_grid2op\\l2rpn_case14_sandbox\\grid.json",
-    "nb_timestep_played": 419
+    "nb_timestep_played": 63
 }

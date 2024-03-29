@@ -11,6 +11,8 @@ import numpy as np
 # Import necessary modules
 import grid2op
 from lightsim2grid import LightSimBackend
+from grid2op.Reward import *
+from grid2op.Action import *
 from grid2op.PlotGrid import PlotMatplot
 
 #help(grid2op.PlotGrid.PlotMatplot)
@@ -45,6 +47,15 @@ for _ in range(10):
     print(env.action_space.size())
     print(env.env_name)
     env.reset()
+    env = grid2op.make("l2rpn_neurips_2020_track2_small")
+    print(env.observation_space.size_obs())
+    print(env.action_space.size())
+    print(env.env_name)
+    env = grid2op.make("l2rpn_neurips_2020_track2_small",action_class = TopologyChangeAndDispatchAction,
+    reward_class = CombinedScaledReward)
+    print(env.observation_space.size_obs())
+    print(env.action_space.size())
+    print(env.env_name)
     env.chronics_handler.tell_id(random.randint(0, 119))
     #print(dir(env.chronics_handler.real_data))
     print("Thread number:", _, ", ID of chronic current folder:", env.chronics_handler.real_data.get_id())

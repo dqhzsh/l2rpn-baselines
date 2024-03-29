@@ -249,6 +249,7 @@ class DoubleDuelingRDQN(AgentWithConverter):
         self._save_hyperparameters(save_path, env, num_steps)
         
         # Training loop
+        print(self.action_size)
         self._reset_state(env.current_obs)
         while step < num_steps:
             # New episode
@@ -334,6 +335,7 @@ class DoubleDuelingRDQN(AgentWithConverter):
                     self.Qmain.update_target_hard(self.Qtarget.model)
 
             total_reward += reward
+            print(total_reward)
             if self.done:
                 self.epoch_rewards.append(total_reward)
                 self.epoch_alive.append(alive_steps)

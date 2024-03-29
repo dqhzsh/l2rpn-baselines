@@ -21,7 +21,7 @@ DEFAULT_NAME = "ModifyDoubleDuelingRDQN"
 DEFAULT_SAVE_DIR = "./models"
 DEFAULT_LOG_DIR = "./logs-train"
 DEFAULT_PRE_STEPS = 256
-DEFAULT_TRAIN_STEPS = 100000
+DEFAULT_TRAIN_STEPS = 500000
 DEFAULT_TRACE_LEN = 12
 DEFAULT_BATCH_SIZE = 32
 DEFAULT_LR = 1e-5
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
     cr.addReward("game", GameplayReward(), 100.0)
     cr.addReward("redisp", RedispReward(), 1e-3)
-    cr.set_range(-10.0, 10.0)
+    cr.set_range(-1.0, 1.0)
     # Initialize custom rewards
     cr.initialize(env)
 
