@@ -69,6 +69,8 @@ class A3CAgent(MLAgent):
             # global variables for threading
             global scores
             scores = []
+            global alive_step
+            alive_step = []
             global time_step_end
             time_step_end = time_step_end2
             global EPISODES_train
@@ -286,7 +288,7 @@ class Agent(threading.Thread):
         self.profiles_chronics = profiles_chronics
 
         # Agent类的__init__方法中，创建一个独立的日志写入对象
-        self.tf_writer = tf.compat.v1.summary.FileWriter("logs-train/thread_" + str(index))
+        self.tf_writer = tf.compat.v1.summary.FileWriter("logs-train1/thread_" + str(index))
 
     # Thread interactive with environment
     def run(self):
@@ -355,6 +357,7 @@ class Agent(threading.Thread):
                               "/Random action: ",epison_flag,"/ number of non-zero actions", non_zero_actions, "/ day_hour_min:", time_hour)
                     # global scores
                     scores.append(score)
+                    alive_step.append(time_step)
                     # print(len(scores))
                     # global episode
                     episode += 1
@@ -401,17 +404,23 @@ class Agent(threading.Thread):
 
         advantages = discounted_rewards - values
 
-        mean_reward = np.mean(scores)
+        # mean_reward = np.mean(scores)
         if len(scores) >= 50:
             mean_reward_50 = np.mean(scores[-50:])
         else:
-            mean_reward_50 = mean_reward
+            mean_reward_50 = np.mean(scores)
+
+        if len(alive_step) >= 50:
+            mean_alive_step_50 = np.mean(alive_step[-50:])
+        else:
+            mean_alive_step_50 = np.mean(alive_step)
 
         # 创建摘要对象
         mean_reward_summary = tf.compat.v1.Summary()
         # 添加平均奖励到摘要
-        mean_reward_summary.value.add(tag="mean_reward", simple_value=mean_reward)
+        # mean_reward_summary.value.add(tag="mean_reward", simple_value=mean_reward)
         mean_reward_summary.value.add(tag="mean_reward_50", simple_value=mean_reward_50)
+        mean_reward_summary.value.add(tag="mean_alive_step_50", simple_value=mean_alive_step_50)
 
         # 将摘要添加到摘要写入器
         self.tf_writer.add_summary(mean_reward_summary, episode)

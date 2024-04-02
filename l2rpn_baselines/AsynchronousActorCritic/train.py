@@ -102,7 +102,7 @@ if __name__ == "__main__":
     # Name of the ".h5" files that stores the actor and critic neural network weights.
     name = "grid2op_14_a3c"
     # Total number of episodes to train the A3C agent.
-    EPISODES_train = 100000
+    EPISODES_train = 1000000
     # Maximum number of time steps or iterations taken in each episode during the training.
     time_step_end = 3000
     # Number of parallel workers or threads to train the A3C agent.

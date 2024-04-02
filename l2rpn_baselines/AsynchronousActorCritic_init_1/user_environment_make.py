@@ -16,7 +16,7 @@ def set_environement(start_id,env_name,profiles_chronics):
     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
     cr.addReward("game", GameplayReward(), 100.0)
     cr.addReward("redisp", RedispReward(), 1e-3)
-    cr.set_range(-10.0, 10.0)
+    cr.set_range(-1.0, 1.0)
     # Initialize custom rewards
     cr.initialize(env)
 

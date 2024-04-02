@@ -5,8 +5,8 @@ try:
     from grid2op.Parameters import Parameters
     from grid2op.Reward import L2RPNReward, CombinedReward, CloseToOverflowReward, GameplayReward
     import sys
-    from l2rpn_baselines.AsynchronousActorCritic_init.AsynchronousActorCritic import A3CAgent
-    from l2rpn_baselines.AsynchronousActorCritic_init.user_environment_make import set_environement
+    from l2rpn_baselines.AsynchronousActorCritic_init_1.AsynchronousActorCritic import A3CAgent
+    from l2rpn_baselines.AsynchronousActorCritic_init_1.user_environment_make import set_environement
     # import pytorch
 except ImportError as exc_:
     raise ImportError("AsynchronousActorCritic baseline impossible to load the required dependencies for training the model. The error was: \n {}".format(exc_))
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     name = "grid2op_14_a3c"
     #name = "l2rpn_2020_track2"
     # Total number of episodes to train the A3C agent.
-    EPISODES_train = 100000
+    EPISODES_train = 1000000
     # Maximum number of time steps or iterations taken in each episode during the training.
-    time_step_end = 8064
+    time_step_end = 3000
     # Number of parallel workers or threads to train the A3C agent.
     Thread_count = 7
     # location where ".h5" files to be saved.
