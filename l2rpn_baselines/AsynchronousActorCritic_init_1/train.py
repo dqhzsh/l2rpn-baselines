@@ -68,7 +68,7 @@ if __name__ == "__main__":
     name = "grid2op_14_a3c"
     #name = "l2rpn_2020_track2"
     # Total number of episodes to train the A3C agent.
-    EPISODES_train = 1000000
+    EPISODES_train = 100000
     # Maximum number of time steps or iterations taken in each episode during the training.
     time_step_end = 3000
     # Number of parallel workers or threads to train the A3C agent.
@@ -81,8 +81,10 @@ if __name__ == "__main__":
     # Neural network architecture hyper parameters. For more details on structure see the ".summary()" that will be
     # printed when running this code.
     Hyperparameters = {}
-    Hyperparameters["actor_learning_rate"] = 0.0003
-    Hyperparameters["critic_learning_rate"] = 0.0003
+    Hyperparameters["actor_learning_rate"] = 1e-5
+    Hyperparameters["critic_learning_rate"] = 1e-5
+    #Hyperparameters["actor_learning_rate"] = 0.0003
+    #Hyperparameters["critic_learning_rate"] = 0.0003
     Hyperparameters["discount_factor"] = 0.95
     Hyperparameters["size_of_hidden_layer_1"] = 200
     Hyperparameters["size_of_hidden_layer_2"] = 100

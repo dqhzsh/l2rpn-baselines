@@ -34,7 +34,9 @@ def cli():
     # Paths
     parser.add_argument("--name", default=DEFAULT_NAME,
                         help="The name of the model")
-    parser.add_argument("--data_dir", default="l2rpn_case14_sandbox",
+    # parser.add_argument("--data_dir", default="l2rpn_case14_sandbox",
+    #                     help="Path to the dataset root directory")
+    parser.add_argument("--data_dir", default="l2rpn_wcci_2020",
                         help="Path to the dataset root directory")
     parser.add_argument("--save_dir", required=False,
                         default=DEFAULT_SAVE_DIR, type=str,

@@ -80,7 +80,7 @@ class A3CAgent(AgentWithConverter):
 
             self.profiles_chronics = profiles_chronics
 
-        # 使用TensorFlow库创建一个交互式会话，并配置了一个不包含GPU的计算设备。然后使用Keras的K.set_session()方法将该会话设置为Keras的默认会话，并运行了全局变量的初始化操作。
+
         self.sess = tf.InteractiveSession(config=tf.ConfigProto(device_count={'GPU': 0}))
         K.set_session(self.sess)
         self.sess.run(tf.global_variables_initializer())
@@ -289,8 +289,8 @@ class Agent(threading.Thread):
                     break
                 else:
                     if time_step % 10 ==0:
-                        print("Continue Thread:", self.index, "/ train episode: ", episode,  "/ instant reward",float(reward), "/ score : ", float(score),
-                              "/ with recent time:", time_step, "/ with recent action", action_index,"/Random action: ",epison_flag,"/ number of non-zero actions", non_zero_actions, "/ max_action so far:", max_action)
+                        # print("Continue Thread:", self.index, "/ train episode: ", episode,  "/ instant reward",float(reward), "/ score : ", float(score),
+                        #       "/ with recent time:", time_step, "/ with recent action", action_index,"/Random action: ",epison_flag,"/ number of non-zero actions", non_zero_actions, "/ max_action so far:", max_action)
                         self.train_episode(False)
 
     # In Policy Gradient, Q function is not available.

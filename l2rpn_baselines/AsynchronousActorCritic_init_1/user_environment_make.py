@@ -2,13 +2,15 @@ from grid2op import make
 from grid2op.Parameters import Parameters
 from grid2op.Reward import *
 from grid2op.Action import *
+from lightsim2grid import LightSimBackend
 
 def set_environement(start_id,env_name,profiles_chronics):
     param = Parameters()
     param.NO_OVERFLOW_DISCONNECTION = True
 
     #env = make(env_name,chronics_path= profiles_chronics, reward_class=CombinedScaledReward, action_class= TopologyChangeAndDispatchAction,param=param)
-    env = make(env_name, chronics_path=profiles_chronics, reward_class=CombinedReward, param=param)
+    backend = LightSimBackend()
+    env = make(env_name, chronics_path=profiles_chronics, reward_class=CombinedReward, param=param, backend=backend)
 
     # Register custom reward for training
     cr = env._reward_helper.template_reward
