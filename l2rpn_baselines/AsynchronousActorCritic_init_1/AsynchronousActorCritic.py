@@ -23,7 +23,7 @@ try:
     from tensorflow.keras.models import Model
     from tensorflow.keras.optimizers import Adam
     import tensorflow.python.keras.backend as K
-    from l2rpn_baselines.AsynchronousActorCritic_init.user_environment_make import set_environement
+    from l2rpn_baselines.AsynchronousActorCritic_init_1.user_environment_make import set_environement
     # import user_environment_make
 except ImportError as exc_:
     raise ImportError("AsynchronousActorCritic baseline impossible to load the required dependencies for training the model. The error was: \n {}".format(exc_))
@@ -71,6 +71,8 @@ class A3CAgent(AgentWithConverter):
             # global variables for threading
             global scores
             scores = []
+            global alive_step
+            alive_step = []
             global time_step_end
             time_step_end = time_step_end2
             global EPISODES_train
@@ -254,10 +256,12 @@ class Agent(threading.Thread):
                 next_state = next_state.reshape([1,next_state.size])
                 # next_state = observation_space.array_to_observation(next_state).as_minimalist().as_array()
                 # score += (reward-0.1*(next_state[1]*next_state[1]+next_state[3]*next_state[3])) # reducing the reward based on speed...
-                score += reward if not done else -100*(1+np.sqrt(episode)/10)
+                #score += reward if not done else -100*(1+np.sqrt(episode)/10)
+                score += reward
                 non_zero_actions += 0 if action_index == 0 else 1
 
-                self.memory(state, action_index, reward if not done else -100*(1+np.sqrt(episode)/10))
+                #self.memory(state, action_index, reward if not done else -100*(1+np.sqrt(episode)/10))
+                self.memory(state, action_index, reward)
 
                 state = copy.deepcopy(next_state) if not done else np.zeros([1, self.state_size])
 
@@ -266,15 +270,16 @@ class Agent(threading.Thread):
 
                 if done or time_step > time_step_end:
                     if done:
-                        print("----STOPPED Thread:", self.index, "/ train episode: ", episode,  "/ instant reward",int(reward), "/ score : ", int(score),
+                        print("----STOPPED Thread:", self.index, "/ train episode: ", episode,  "/ instant reward",float(reward), "/ score : ", float(score),
                               "/ with final time:", time_step, "/ with final action", action_index,
                               "/Random action: ",epison_flag,"/ number of non-zero actions", non_zero_actions, "/ day_hour_min:", time_hour)
                     if time_step > time_step_end:
-                        print("End Thread:", self.index, "/ train episode: ", episode,  "/ instant reward",int(reward), "/ score : ", int(score),
+                        print("End Thread:", self.index, "/ train episode: ", episode,  "/ instant reward",float(reward), "/ score : ", float(score),
                               "/ with final time:", time_step, "/ with final action", action_index,
                               "/Random action: ",epison_flag,"/ number of non-zero actions", non_zero_actions, "/ day_hour_min:", time_hour)
                     # global scores
                     scores.append(score)
+                    alive_step.append(time_step)
                     # print(len(scores))
                     # global episode
                     episode += 1
@@ -284,7 +289,7 @@ class Agent(threading.Thread):
                     break
                 else:
                     if time_step % 10 ==0:
-                        print("Continue Thread:", self.index, "/ train episode: ", episode,  "/ instant reward",int(reward), "/ score : ", int(score),
+                        print("Continue Thread:", self.index, "/ train episode: ", episode,  "/ instant reward",float(reward), "/ score : ", float(score),
                               "/ with recent time:", time_step, "/ with recent action", action_index,"/Random action: ",epison_flag,"/ number of non-zero actions", non_zero_actions, "/ max_action so far:", max_action)
                         self.train_episode(False)
 
@@ -321,17 +326,23 @@ class Agent(threading.Thread):
 
         advantages = discounted_rewards - values
 
-        mean_reward = np.mean(scores)
+        #mean_reward = np.mean(scores)
         if len(scores) >= 50:
             mean_reward_50 = np.mean(scores[-50:])
         else:
-            mean_reward_50 = mean_reward
+            mean_reward_50 = np.mean(scores)
+
+        if len(alive_step) >= 50:
+            mean_alive_step_50 = np.mean(alive_step[-50:])
+        else:
+            mean_alive_step_50 = np.mean(alive_step)
 
         # 创建摘要对象
         mean_reward_summary = tf.compat.v1.Summary()
         # 添加平均奖励到摘要
-        mean_reward_summary.value.add(tag="mean_reward", simple_value=mean_reward)
-        mean_reward_summary.value.add(tag="mean_reward_100", simple_value=mean_reward_50)
+        #mean_reward_summary.value.add(tag="mean_reward", simple_value=mean_reward)
+        mean_reward_summary.value.add(tag="mean_reward_50", simple_value=mean_reward_50)
+        mean_reward_summary.value.add(tag="mean_alive_step_50", simple_value=mean_alive_step_50)
 
         # 将摘要添加到摘要写入器
         self.tf_writer.add_summary(mean_reward_summary, episode)

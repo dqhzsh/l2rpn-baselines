@@ -16,7 +16,7 @@ except ImportError as exc_:
 def prune_action_space(bus_no):
     # Initialize the env."case5_example",chronics_path=os.path.join("public_data", "chronics_5bus_example")
     if bus_no == "14":
-        environment = make()
+        environment = make('l2rpn_case14_sandbox')
         num_substations = 14 # 14 for 14 bus
     elif bus_no == "5":
         environment = make("case5_example",chronics_path=os.path.join("public_data", "chronics_5bus_example"))
@@ -38,8 +38,9 @@ def prune_action_space(bus_no):
 
     # Line id sender
     print("\nPowerline information:")
-    lines_or_to_subid = environment.action_space.lines_or_to_subid
-    lines_ex_to_subid = environment.action_space.lines_ex_to_subid
+    lines_or_to_subid = environment.action_space.line_or_to_subid
+    #lines_or_to_subid = environment.action_space.lines_or_to_subid
+    lines_ex_to_subid = environment.action_space.line_ex_to_subid
 
     print ('There are {} transmissions lines on this grid.'.format(len(lines_or_to_subid)))
 
@@ -56,7 +57,7 @@ def prune_action_space(bus_no):
     1;
     # Num of elements per SE
     print("\nSubstations information:")
-    for i, nb_el in enumerate(environment.action_space.subs_info):
+    for i, nb_el in enumerate(environment.action_space.sub_info):
         print("On susbtation {} there are {} elements.".format(i, nb_el))
 
     # adding the change_actions at for 1 substation at a time . Initializing with no action
@@ -69,14 +70,14 @@ def prune_action_space(bus_no):
     load_action_list_bus_2 = [[]]
     line_or_action_list_bus_2 = [[]]
     line_ex_action_list_bus_2 = [[]]
-    do_nothing_act = environment.helper_action_player({})
+    do_nothing_act = environment._helper_action_player({})
     obs, reward, done, info = environment.step(do_nothing_act)
     for sub_id in range(num_substations):
         num_gen_at_sub = len(gen_at_sub[sub_id] )
         num_load_at_sub = len(load_at_sub[sub_id] )
         num_line_or_at_sub = len(lines_or_at_sub[sub_id] )
         num_line_ex_at_sub = len(lines_ex_at_sub[sub_id] )
-        switching_patterns = ["".join(seq) for seq in itertools.product("01",repeat=environment.action_space.subs_info[sub_id] - 1)]  # reduce by 1 bit due to compliment being the same
+        switching_patterns = ["".join(seq) for seq in itertools.product("01",repeat=environment.action_space.sub_info[sub_id] - 1)]  # reduce by 1 bit due to compliment being the same
         switching_patterns = [[int(sw_i_k) for sw_i_k in '0' + sw_i] for sw_i in switching_patterns]  # adding back the '0' at the beginning as we are fizing this bit
         switching_patterns.pop(0) # deleting first action as it is a no-action
         for sw_action in switching_patterns:
@@ -86,6 +87,8 @@ def prune_action_space(bus_no):
             line_or_action_list.append(lines_or_at_sub[sub_id][switching_patterns_split[2] == 1])
             line_ex_action_list.append(lines_ex_at_sub[sub_id][switching_patterns_split[3] == 1])
             substation_acted.append(sub_id)
+
+
             # gen_action_list_bus_2.append(gen_at_sub[sub_id][switching_patterns_split[0] == 0])
             # load_action_list_bus_2.append(load_at_sub[sub_id][switching_patterns_split[1] == 0])
             # line_or_action_list_bus_2.append(lines_or_at_sub[sub_id][switching_patterns_split[2] == 0])

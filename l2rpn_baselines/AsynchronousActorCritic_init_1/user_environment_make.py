@@ -7,16 +7,16 @@ def set_environement(start_id,env_name,profiles_chronics):
     param = Parameters()
     param.NO_OVERFLOW_DISCONNECTION = True
 
-    env = make(env_name,chronics_path= profiles_chronics, reward_class=CombinedScaledReward, action_class= TopologyChangeAndDispatchAction,param=param)
-    #env = make(env_name, chronics_path=profiles_chronics, reward_class=CombinedReward, param=param)
+    #env = make(env_name,chronics_path= profiles_chronics, reward_class=CombinedScaledReward, action_class= TopologyChangeAndDispatchAction,param=param)
+    env = make(env_name, chronics_path=profiles_chronics, reward_class=CombinedReward, param=param)
 
     # Register custom reward for training
     cr = env._reward_helper.template_reward
-    cr.addReward("reco", LinesReconnectedReward(), 50.0)
+    #cr.addReward("reco", LinesReconnectedReward(), 50.0)
     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
     cr.addReward("game", GameplayReward(), 100.0)
-    cr.addReward("redisp", RedispReward(), 1e-3)
-    cr.set_range(-10.0, 10.0)
+    #cr.addReward("redisp", RedispReward(), 1e-3)
+    #cr.set_range(-1.0, 1.0)
     # Initialize custom rewards
     cr.initialize(env)
 

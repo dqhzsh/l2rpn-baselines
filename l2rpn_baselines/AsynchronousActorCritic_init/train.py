@@ -68,9 +68,9 @@ if __name__ == "__main__":
     name = "grid2op_14_a3c"
     #name = "l2rpn_2020_track2"
     # Total number of episodes to train the A3C agent.
-    EPISODES_train = 100000
+    EPISODES_train = 1000000
     # Maximum number of time steps or iterations taken in each episode during the training.
-    time_step_end = 8064
+    time_step_end = 3000
     # Number of parallel workers or threads to train the A3C agent.
     Thread_count = 7
     # location where ".h5" files to be saved.
