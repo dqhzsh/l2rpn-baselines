@@ -16,7 +16,7 @@ except ImportError as exc_:
 def prune_action_space(bus_no):
     # Initialize the env."case5_example",chronics_path=os.path.join("public_data", "chronics_5bus_example")
     if bus_no == "14":
-        environment = make()
+        environment = make('l2rpn_case14_sandbox')
         num_substations = 14 # 14 for 14 bus
     elif bus_no == "5":
         environment = make("case5_example",chronics_path=os.path.join("public_data", "chronics_5bus_example"))

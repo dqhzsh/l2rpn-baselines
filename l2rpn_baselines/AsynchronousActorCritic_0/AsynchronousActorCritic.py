@@ -1,4 +1,5 @@
 try:
+    from memory_profiler import profile
     import grid2op
     import threading
     import numpy as np
@@ -182,7 +183,7 @@ class A3CAgent(MLAgent):
         optimizer = Adam(lr=self.actor_lr)
         # updates = optimizer.get_updates(params=self.actor.trainable_weights, constraints=[],loss=actor_loss)
         updates = optimizer.get_updates(params=self.actor.trainable_weights, loss=actor_loss)
-        train = K.function([self.actor.input, action, advantages], tf.compat.v1.convert_to_tensor([]),updates=updates)
+        train = K.function([self.actor.input, action, advantages], tf.convert_to_tensor([]),updates=updates)
         return train
 
     # make loss function for Value approximation
@@ -196,7 +197,7 @@ class A3CAgent(MLAgent):
         optimizer = Adam(lr=self.critic_lr)
         # updates = optimizer.get_updates(params=self.critic.trainable_weights, constraints=[],loss=loss)
         updates = optimizer.get_updates(params=self.critic.trainable_weights, loss=loss)
-        train = K.function([self.critic.input, discounted_reward], tf.compat.v1.convert_to_tensor([]), updates=updates)
+        train = K.function([self.critic.input, discounted_reward], tf.convert_to_tensor([]), updates=updates)
         return train
 
     # make agents(local) and start training
@@ -215,6 +216,9 @@ class A3CAgent(MLAgent):
                 print("_______________________________________________________________________________________________________")
                 print("saved NN model at episode", episode, "\n")
                 print("_______________________________________________________________________________________________________")
+
+                # 清除Keras会话
+                #K.clear_session()
 
     def load_model(self, nn_weight_name, load_path):
             self.actor.load_weights(os.path.join(load_path,nn_weight_name + "_actor.h5"))
@@ -250,10 +254,11 @@ class Agent(threading.Thread):
         self.profiles_chronics = profiles_chronics
 
         # Agent类的__init__方法中，创建一个独立的日志写入对象
-        self.tf_writer = tf.compat.v1.summary.FileWriter("logs-train/thread_" + str(index))
+        self.tf_writer = tf.compat.v1.summary.FileWriter("logs-train-1/thread_" + str(index))
 
     # Thread interactive with environment
     def run(self):
+        K.clear_session()  # 在每次线程运行之前清除 TensorFlow 会话
         global episode
         episode = 0
         env = set_environement(self.index,self.env_name,self.profiles_chronics)
@@ -268,7 +273,7 @@ class Agent(threading.Thread):
             time_step = 0
             max_action = 0
             non_zero_actions = 0
-            epsilon = 0.5
+            epsilon = 0.05
             while True:
                 # Decaying epsilon greedy. Not the best one. This agent needs a better exploration strategy to help
                 # it learn to perform well.
@@ -397,6 +402,9 @@ class Agent(threading.Thread):
                 self.optimizer[1]([state_as_tensor, discounted_rewards])
                 self.states, self.actions, self.rewards = [], [], []
 
+        # 清除 TensorFlow 会话
+        K.clear_session()
+
 
     def get_action(self, state_as_dict, state):
         with self.session.as_default():
@@ -432,44 +440,8 @@ class Agent(threading.Thread):
         {"change_bus": {"generators_id": gen_action_list[action_index], "loads_id": load_action_list[action_index],
                         "lines_or_id": line_or_action_list[action_index],
                         "lines_ex_id": line_ex_action_list[action_index]}})
-        # if flag == 1:
-        #     print("_______________________________________________________________________________________________________")
-        #     print("thread number ", self.index," Executed action index in environment step:", action_index," at episode:", episode)
-        #     # print(action)
-        #     print("_______________________________________________________________________________________________________")
-        # else:
-        #     print("_______________________________________________________________________________________________________")
-        #     print("thread number ", self.index," Executed action index at simulate step:", action_index," at episode:", episode)
-        #     # print(action)
-        #     print("_______________________________________________________________________________________________________")
         return action
 
-# def set_environement(start_id,env_name,profiles_chronics):
-#     param = Parameters()
-#     param.NO_OVERFLOW_DISCONNECTION = True
-#
-#     env = make(env_name,chronics_path= profiles_chronics, reward_class=CombinedReward,param=param)
-#     # Register custom reward for training
-#     cr = env.reward_helper.template_reward
-#     cr.addReward("overflow", CloseToOverflowReward(), 50.0)
-#     cr.addReward("game", GameplayReward(), 100.0)
-#     cr.initialize(env)
-#
-#     # Debug prints
-#     print("Debug prints --->:")
-#     print("Chronics location that being used:", env.chronics_handler.path)
-#     print("Grid location being used:", env.init_grid_path)
-#     print("Reward class that is being used:", env.rewardClass)
-#     print("Action type class being used:", env.actionClass)
-#     print("Observation type class being used:", env.observationClass)
-#     print("Backend CSV file key names:", env.names_chronics_to_backend)
-#     print("Legal action class being used:", env.legalActClass)
-#     print("Voltage controller class being used:", env.voltagecontrolerClass)
-#
-#     if start_id != None:
-#         env.chronics_handler.tell_id(start_id)
-#         print("Thread number:",start_id,", ID of chronic current folder:",env.chronics_handler.real_data.id_chron_folder_current)
-#     return env
 
 # This below function reduces the size of the state space.
 def useful_state(obs,value_multiplier):
