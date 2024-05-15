@@ -138,7 +138,9 @@ class A3CAgent(MLAgent):
         with self.sess.as_default():
             with self.sess.graph.as_default():
                 # Predict the action using the internal neural network
-                policy = self.actor.predict(state,batch_size=1).flatten()
+                policy = self.actor.predict(state, batch_size=1).flatten()
+                # state = tf.compat.v1.convert_to_tensor(state)
+                #policy = self.actor(state, training=False)
 
         # Select first 4 best possible actions from the neural nets.
         policy_chosen_list = np.random.choice(self.action_size, 4, p=policy)
@@ -254,7 +256,7 @@ class Agent(threading.Thread):
         self.profiles_chronics = profiles_chronics
 
         # Agent类的__init__方法中，创建一个独立的日志写入对象
-        self.tf_writer = tf.compat.v1.summary.FileWriter("logs-train-1/thread_" + str(index))
+        self.tf_writer = tf.compat.v1.summary.FileWriter("logs-train-3-修改原版本[0]/thread_" + str(index))
 
     # Thread interactive with environment
     def run(self):
@@ -347,6 +349,7 @@ class Agent(threading.Thread):
             with self.session.as_default():
                 with self.session.graph.as_default():
                     running_add = self.critic.predict(np.reshape(self.states[-1], (1, self.state_size)))[0]
+                    #running_add = self.critic(np.reshape(self.states[-1], (1, self.state_size)), training=False)[0].eval().flatten()
         for t in reversed(range(0, len(rewards))):
             running_add = running_add * self.discount_factor + rewards[t]
             discounted_rewards[t] = running_add
@@ -366,7 +369,9 @@ class Agent(threading.Thread):
         discounted_rewards = self.discount_rewards(self.rewards, done)
         with self.session.as_default():
             with self.session.graph.as_default():
-                values = self.critic.predict(np.array(self.states))[0]
+                values = self.critic.predict(np.array(self.states))
+                # states = tf.compat.v1.convert_to_tensor(np.asarray(self.states))
+                # values = self.critic(states, training=False).eval()
         values = np.reshape(values, len(values))
 
         advantages = discounted_rewards - values
@@ -410,7 +415,11 @@ class Agent(threading.Thread):
         with self.session.as_default():
             with self.session.graph.as_default():
                 # Predict the action using the internal neural network
-                policy = self.actor.predict(state,batch_size=1).flatten()
+                policy = self.actor.predict(state, batch_size=1).flatten()
+
+                # state = tf.compat.v1.convert_to_tensor(state)
+                # policy = self.actor(state, training=False)
+                # policy = policy.eval().flatten()
 
         # Select first 4 best possible actions from the neural nets.
         policy_chosen_list = np.random.choice(self.action_size, 4, p=policy)
